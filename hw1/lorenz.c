@@ -4,9 +4,7 @@
  * Lorenz Attractor Visualization
  *
  * This program calculates and displays the Lorenz attractor in 3D.
- * It is adapted from the 'ex7.c' visibility example.
  *
- * Version 4: Added a key to reset all parameters to their default state.
  *
  * Key bindings:
  * h         Toggle help legend
@@ -204,7 +202,7 @@ void key(unsigned char ch, int x, int y)
         th = DEF_TH;
         ph = DEF_PH;
     }
-    // --- NEW: Reset all parameters ---
+    // Reset all parameters
     else if (ch == 'd' || ch == 'D')
     {
         reset_parameters();
@@ -236,7 +234,7 @@ void reshape(int width, int height)
 }
 
 /*
- * Start up GLUT and tell it what to do
+ * Start up GLUT
  */
 int main(int argc, char* argv[])
 {
@@ -247,7 +245,7 @@ int main(int argc, char* argv[])
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(600, 600);
-    glutCreateWindow("Lorenz Attractor");
+    glutCreateWindow("Lorenz Attractor - Sanjay Baskaran");
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutSpecialFunc(special);
