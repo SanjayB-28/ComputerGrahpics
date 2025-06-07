@@ -1,22 +1,3 @@
-/*
- * lorenz.c
- * --------
- * Lorenz Attractor Visualization
- *
- * This program calculates and displays the Lorenz attractor in 3D.
- *
- *
- * Key bindings:
- * h         Toggle help legend
- * d         Reset all parameters to default
- * s/S       Increase/decrease sigma parameter
- * b/B       Increase/decrease beta parameter
- * r/R       Increase/decrease rho parameter
- * a         Toggle axes
- * arrows    Change view angle (azimuth and elevation)
- * 0         Reset view angle to default
- * ESC       Exit
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

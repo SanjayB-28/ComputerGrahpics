@@ -1,6 +1,3 @@
-#
-# Makefile for Lorenz Attractor program
-#
 EXE=lorenz
 
 # Main target
