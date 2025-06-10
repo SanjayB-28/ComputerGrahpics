@@ -1,4 +1,4 @@
-EXE=lorenz
+EXE=hw1
 
 # Main target
 all: $(EXE)
