@@ -1,2 +1,13 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Ignore common compilation files
+*.o
+*.obj
+*.exe
+*.out
+*.class
+*.dll
+*.so
+*.dylib
+/build/
+bin/
