@@ -20,7 +20,7 @@ For this assignment, I initially debated various scene ideas before settling on 
     - A monitor and MacBook
     - A keyboard and mouse resting on a mousepad
     - Multiple notebooks scattered around the desk
-    - A textured floor
+    - A Basic floor
 
 - **Multiple Projection Modes:**  
     Toggle between:
