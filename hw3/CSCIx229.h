@@ -36,59 +36,29 @@ void idle();
 void reshape(int width,int height);
 
 // Global Variables
-
-// Display axes
-extern int axes;
-// Azimuth of view angle
-extern int th;
-// Elevation of view angle
-extern int ph;
-// Color mode
-extern int mode;
-// Dimension of orthogonal box
-extern double dim;
-// Length of axes
-extern double len;
-// Maximum number
-extern int n;
-// Field of view (for perspective)
-extern int fov;
-// Aspect ratio
-extern double asp;
-// View mode for print
-extern char* views[];
-// X-coordinate of camera position
-extern double EX;
-// Y-coordinate of camera position
-extern double EY;
-// Z-coordinate of camera position
-extern double EZ;
-// X-coordinate of where the camera is looking
-extern double AX;
-// Y-coordinate of where the camera is looking
-extern double AY;
-// Z-coordinate of where the camera is looking
-extern double AZ;
+extern int axes;         // Display axes
+extern int th;           // Azimuth of view angle
+extern int ph;           // Elevation of view angle
+extern int mode;         // Color mode
+extern double dim;       // Dimension of orthogonal box
+extern double len;       // Length of axes
+extern int n;            // Maximum number
+extern int fov;          // Field of view (for perspective)
+extern double asp;       // Aspect ratio
+extern char* views[];    // View mode for print
+extern double EX, EY, EZ; // Camera position
+extern double AX, AY, AZ; // Camera look-at position
 
 // Lighting
 extern int light;
-// Ambient light
 extern int ambient;
-// Diffuse light
 extern int diffuse;
-// Emission light
 extern int emission;
-// Specular light
 extern int specular;
-// Light distance
 extern int light_distance;
-// Light angle
 extern int light_angle;
-// Light height
 extern int light_height;
-// Light move
 extern int light_move;
-
 
 #ifdef __cplusplus
 }

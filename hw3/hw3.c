@@ -1,58 +1,29 @@
 #include "CSCIx229.h"
 
-int axes = 0; // Off by default
+int axes = 0;
 int th = 30;
-// Elevation of view angle
 int ph = 30;
-// First person view angles
 int fp_th = 0;
 int fp_ph = 0;
-// Color mode
 int mode = 0;
-// Dimension of orthogonal box
 double dim = 5.0;
-// Length of axes
 double len = 2;
-// Maximum number
 int n = 50000;
-// Field of view (for perspective)
 int fov = 55;
-// Aspect ratio
 double asp=1;
-// View mode for print
 char* views[] = {"Orthogonal", "Perspective", "First Person"};
-// X-coordinate of camera position
-double EX = 0;
-// Y-coordinate of camera position
-double EY = 0;
-// Z-coordinate of camera position
-double EZ = 10;
-// X-coordinate of where the camera is looking
-double AX = 0;
-// Y-coordinate of where the camera is looking
-double AY = 0;
-// Z-coordinate of where the camera is looking
-double AZ = 0;
+double EX = 0, EY = 0, EZ = 10;
+double AX = 0, AY = 0, AZ = 0;
 
-// Lighting
 int light = 1;
-// Ambient light
 int ambient = 30;
-// Diffuse light
 int diffuse = 100;
-// Emission light
 int emission = 0;
-// Specular light
 int specular = 0;
-// Light distance
 int light_distance = 5;
-// Light angle
 int light_angle = 90;
-// Light height
 int light_height = 3;
-// Light move
 int light_move = 1;
-
 
 unsigned int leafTexture;
 unsigned int woodTexture;
@@ -61,15 +32,9 @@ unsigned int roofTexture;
 unsigned int sunTexture;
 unsigned int cloudTexture;
 
-
-/*
- *  Draw a sphere at (x,y,z) radius (r)
- */
 void Sun (double x, double y, double z, double radius) {
   const int d=5;
-  //  Save transformation
   glPushMatrix();
-  //  Offset and scale
   glTranslatef(x, y, z);
   glScalef(radius, radius, radius);
 
@@ -103,19 +68,13 @@ void Sun (double x, double y, double z, double radius) {
     }
     glEnd();
   }
-
-  //  Undo transformations
   glPopMatrix();
   glDisable(GL_TEXTURE_2D);
 }
 
-
-
 void Cylinder (double x, double y, double z, double radius, double height) {
   const int d=5;
-  //  Save transformation
   glPushMatrix();
-  //  Offset and scale
   glTranslatef(x, y, z);
   glScalef(radius, height, radius);
 
@@ -123,7 +82,6 @@ void Cylinder (double x, double y, double z, double radius, double height) {
   glVertex3f(0, 0, 0);
   glTexCoord2f(0.5, 0.5);
   for (int th=0; th<=360; th+=d) {
-    // glColor3f(0.4*Cos(th), 0.4 , 0.4*Sin(th));
     glColor3f(1, 1, 1);
     glNormal3d(Sin(th), 0, Cos(th));
     glTexCoord2f(Sin(th)+0.5, Cos(th)+0.5);
@@ -131,14 +89,11 @@ void Cylinder (double x, double y, double z, double radius, double height) {
   }
   glEnd();
 
-  // Latitude bands
   for (int th=0; th<=360; th+=d) {
     glBegin(GL_QUADS);
-    // glColor3f(0.4*Cos(th), 0.4 , 0.4*Sin(th));
     glColor3f(1, 1, 1);
 
     float shininess[] = {0};
-    // float color[] = {0.4*Cos(th), 0.4, 0.4*Sin(th), 1.0};
     float color[] = {1, 1, 1, 1.0};
     float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
     glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
@@ -165,21 +120,17 @@ void Cylinder (double x, double y, double z, double radius, double height) {
   glBegin(GL_TRIANGLE_FAN);
   glVertex3f(0, 1, 0);
   for (int th=0; th<=360; th+=d) {
-    // glColor3f(0.4*Cos(th), 0.4 , 0.4*Sin(th));
     glColor3f(1, 1, 1);
     glTexCoord2f(Cos(th)+0.5, Sin(th)+0.5);
     glVertex3f(Sin(th), 1, Cos(th));
   }
   glEnd();
-  //  Undo transformations
   glPopMatrix();
 }
 
 void Cone (double x, double y, double z, double radius, double height) {
   const int d=5;
-  //  Save transformation
   glPushMatrix();
-  //  Offset and scale
   glTranslatef(x, y, z);
   glScalef(radius, height, radius);
 
@@ -188,13 +139,10 @@ void Cone (double x, double y, double z, double radius, double height) {
   glVertex3f(0, 0, 0);
 
   for (int th=0; th<=360; th+=d) {
-    // glColor3f(0.5*Cos(th), 1 , 0.5*Sin(th));
     glColor3f(1, 1, 1);
 
     float shininess[] = {0};
-    // float color[] = {0.5*Cos(th), 1, 0.5*Sin(th), 1.0};
     float color[] = {1, 1, 1, 1.0};
-
     float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
     glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT,GL_SPECULAR, color);
@@ -210,11 +158,9 @@ void Cone (double x, double y, double z, double radius, double height) {
   glTexCoord2f(0.5, 0.5);
   glVertex3f(0, 1, 0);
   for (int th=0; th<=360; th+=d) {
-    // glColor3f(0.5*Cos(th), 1 , 0.5*Sin(th));
     glColor3f(1, 1, 1);
 
     float shininess[] = {0};
-    // float color[] = {0.5*Cos(th), 1, 0.5*Sin(th), 1.0};
     float color[] = {1, 1, 1, 1.0};
     float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
     glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
@@ -227,132 +173,100 @@ void Cone (double x, double y, double z, double radius, double height) {
   }
   glEnd();
 
-  //  Undo transformations
   glPopMatrix();
 }
 
-
-/*
- *  Draw a cube at (x,y,z)
- *  with height (h), length (l), width (w)
- *  at angle (angle) on x (ax), y (ay), or z (az)
- *
- */
 void Cube(double x, double y, double z, double width, double height, double depth, double angle, double ax, double ay, double az) {
-  //  Save transformation
   glPushMatrix();
-  //  Offset, scale
   glTranslatef(x, y, z);
   glRotatef(angle, ax, ay, az);
   glScalef(width, height, depth);
-  // glColor3f(0, 0, 1);
   glColor3f(1, 1, 1);
 
   float shininess[] = {0};
-  // float color[] = {0, 0, 1, 1.0};
   float color[] = {1, 1, 1, 1.0};
   float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
   glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
   glMaterialfv(GL_FRONT,GL_SPECULAR, color);
   glMaterialfv(GL_FRONT,GL_EMISSION, emit);
 
-
-  //  Cube
   glBegin(GL_QUADS);
   glNormal3f( 0, 0,+1);
   glTexCoord2f(0, 0); glVertex3f(-1, 0,+1);
   glTexCoord2f(1, 0); glVertex3f(+1, 0,+1);
   glTexCoord2f(1, 1); glVertex3f(+1,+1,+1);
   glTexCoord2f(0, 1); glVertex3f(-1,+1,+1);
-  //  Back
   glNormal3f( 0, 0,-1);
   glTexCoord2f(0, 0); glVertex3f(+1, 0,-1);
   glTexCoord2f(1, 0); glVertex3f(-1, 0,-1);
   glTexCoord2f(1, 1); glVertex3f(-1,+1,-1);
   glTexCoord2f(0, 1); glVertex3f(+1,+1,-1);
-  //  Right
   glNormal3f(+1, 0, 0);
   glTexCoord2f(0, 0); glVertex3f(+1, 0,+1);
   glTexCoord2f(1, 0); glVertex3f(+1, 0,-1);
   glTexCoord2f(1, 1); glVertex3f(+1,+1,-1);
   glTexCoord2f(0, 1); glVertex3f(+1,+1,+1);
-  //  Left
   glNormal3f(-1, 0, 0);
   glTexCoord2f(0, 0); glVertex3f(-1, 0,-1);
   glTexCoord2f(1, 0); glVertex3f(-1, 0,+1);
   glTexCoord2f(1, 1); glVertex3f(-1,+1,+1);
   glTexCoord2f(0, 1); glVertex3f(-1,+1,-1);
-  //  Top
   glNormal3f( 0,+1, 0);
   glTexCoord2f(0, 0); glVertex3f(-1,+1,+1);
   glTexCoord2f(1, 0); glVertex3f(+1,+1,+1);
   glTexCoord2f(1, 1); glVertex3f(+1,+1,-1);
   glTexCoord2f(0, 1); glVertex3f(-1,+1,-1);
-  //  Bottom
   glNormal3f( 0,-1, 0);
   glTexCoord2f(0, 0); glVertex3f(-1, 0,-1);
   glTexCoord2f(1, 0); glVertex3f(+1, 0,-1);
   glTexCoord2f(1, 1); glVertex3f(+1, 0,+1);
   glTexCoord2f(0, 1); glVertex3f(-1, 0,+1);
-  //  End
   glEnd();
-  //  Undo transformations
   glPopMatrix();
 }
 
 void Roof(double x, double y, double z, double width, double height, double depth, double angle, double ax, double ay, double az) {
-  //  Save transformation
   glPushMatrix();
-  //  Offset, scale
   glTranslatef(x, y, z);
   glRotatef(angle, ax, ay, az);
   glScalef(width, height, depth);
-
-  // Set color or texture (if using textures, bind them here)
   glColor3f(1, 1, 1);
 
-  // Front face (triangular)
-  glBegin(GL_TRIANGLES);
-  glNormal3f(0, 1, 0);  // Normal pointing up
-  glTexCoord2f(0, 0); glVertex3f(-1, 0, +1);  // Left bottom of the roof
-  glTexCoord2f(1, 0); glVertex3f(+1, 0, +1);  // Right bottom of the roof
-  glTexCoord2f(0.5, 1); glVertex3f(0, +1, 0);  // Peak of the roof
-  glEnd();
-
-  // Back face (triangular)
   glBegin(GL_TRIANGLES);
   glNormal3f(0, 1, 0);
-  glTexCoord2f(0, 0); glVertex3f(-1, 0, -1);  // Left bottom of the roof (back)
-  glTexCoord2f(1, 0); glVertex3f(+1, 0, -1);  // Right bottom of the roof (back)
-  glTexCoord2f(0.5, 1); glVertex3f(0, +1, 0);  // Peak of the roof
+  glTexCoord2f(0, 0); glVertex3f(-1, 0, +1);
+  glTexCoord2f(1, 0); glVertex3f(+1, 0, +1);
+  glTexCoord2f(0.5, 1); glVertex3f(0, +1, 0);
   glEnd();
 
-  // Right side (rectangular)
-  glBegin(GL_QUADS);
-  glNormal3f(0, 0, 1);  // Normal pointing forward
-  glTexCoord2f(0, 0); glVertex3f(+1, 0, +1);  // Front right bottom
-  glTexCoord2f(1, 0); glVertex3f(+1, 0, -1);  // Back right bottom
-  glTexCoord2f(1, 1); glVertex3f(0, +1, 0);  // Peak of the roof
-  glTexCoord2f(0, 1); glVertex3f(0, +1, 0);  // Peak of the roof (redundant to close)
+  glBegin(GL_TRIANGLES);
+  glNormal3f(0, 1, 0);
+  glTexCoord2f(0, 0); glVertex3f(-1, 0, -1);
+  glTexCoord2f(1, 0); glVertex3f(+1, 0, -1);
+  glTexCoord2f(0.5, 1); glVertex3f(0, +1, 0);
   glEnd();
 
-  // Left side (rectangular)
   glBegin(GL_QUADS);
   glNormal3f(0, 0, 1);
-  glTexCoord2f(0, 0); glVertex3f(-1, 0, +1);  // Front left bottom
-  glTexCoord2f(1, 0); glVertex3f(-1, 0, -1);  // Back left bottom
-  glTexCoord2f(1, 1); glVertex3f(0, +1, 0);  // Peak of the roof
-  glTexCoord2f(0, 1); glVertex3f(0, +1, 0);  // Peak of the roof (redundant to close)
+  glTexCoord2f(0, 0); glVertex3f(+1, 0, +1);
+  glTexCoord2f(1, 0); glVertex3f(+1, 0, -1);
+  glTexCoord2f(1, 1); glVertex3f(0, +1, 0);
+  glTexCoord2f(0, 1); glVertex3f(0, +1, 0);
   glEnd();
 
-  //  Undo transformations
+  glBegin(GL_QUADS);
+  glNormal3f(0, 0, 1);
+  glTexCoord2f(0, 0); glVertex3f(-1, 0, +1);
+  glTexCoord2f(1, 0); glVertex3f(-1, 0, -1);
+  glTexCoord2f(1, 1); glVertex3f(0, +1, 0);
+  glTexCoord2f(0, 1); glVertex3f(0, +1, 0);
+  glEnd();
+
   glPopMatrix();
 }
 void Vertex(double th, double ph) {
-    //glColor3f(Cos(th) * Cos(th), Sin(ph) * Sin(ph), Sin(th) * Sin(th));
     glVertex3d(Sin(th) * Cos(ph), Sin(ph), Cos(th) * Cos(ph));
 }
-
 
 void Sphere(double x, double y, double z, double radius, unsigned int textureID) {
     const int d = 5;
@@ -409,43 +323,31 @@ void House(double x, double y, double z, double dx, double dy, double dz) {
 void Tree(double x, double y, double z, double size) {
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, woodTexture);
-    //Cylinder(x, y, z, radius/5, height);
     Cylinder(x, y, z, 0.1 * size, 0.5 * size);
     glBindTexture(GL_TEXTURE_2D, leafTexture);
-    Cone(x, y + 0.5 * size, z, 0.3 * size, 0.3 * size); // Base cone
-    Cone(x, y + 0.8 * size, z, 0.25 * size, 0.25 * size); // Middle cone
-    Cone(x, y + 1.05 * size, z, 0.2 * size, 0.2 * size); // Top cone
+    Cone(x, y + 0.5 * size, z, 0.3 * size, 0.3 * size);
+    Cone(x, y + 0.8 * size, z, 0.25 * size, 0.25 * size);
+    Cone(x, y + 1.05 * size, z, 0.2 * size, 0.2 * size);
     glDisable(GL_TEXTURE_2D);
 }
 
 void Cloud(double x, double y, double z, double size) {
-    // Center sphere
     Sphere(x, y, z, size, cloudTexture);
-    // Left sphere
     Sphere(x - 0.6 * size, y, z, 0.7 * size, cloudTexture);
-    // Right sphere
     Sphere(x + 0.6 * size, y, z, 0.7 * size, cloudTexture);
 }
 
 void projection() {
-   //  Tell OpenGL we want to manipulate the projection matrix
    glMatrixMode(GL_PROJECTION);
-   //  Undo previous transformations
    glLoadIdentity();
-   //  Perspective transformation
    if (mode)
       gluPerspective(fov,asp,dim/4,4*dim);
-   //  Orthogonal projection
    else
       glOrtho(-asp*dim,+asp*dim, -dim,+dim, -dim,+dim);
-   //  Switch to manipulating the model matrix
    glMatrixMode(GL_MODELVIEW);
-   //  Undo previous transformations
    glLoadIdentity();
 }
-/*
- *  OpenGL (GLUT) calls this routine to display the scene
- */
+
 void display () {
 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
@@ -468,7 +370,6 @@ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 float Ambient[] = {0.01 * ambient, 0.01 * ambient, 0.01 * ambient, 1.0};
 float Diffuse[] = {0.01 * diffuse, 0.01 * diffuse, 0.01 * diffuse, 1.0};
 float Specular[] = {0.01 * specular, 0.01 * specular, 0.01 * specular, 1.0};
-
 float Position[] = {light_distance * Cos(light_angle), light_height, light_distance * Sin(light_angle), 1.0};
 
 glColor3f(1, 1, 1);
@@ -485,7 +386,6 @@ glLightfv(GL_LIGHT0, GL_DIFFUSE, Diffuse);
 glLightfv(GL_LIGHT0, GL_SPECULAR, Specular);
 glLightfv(GL_LIGHT0, GL_POSITION, Position);
   }
-
 
   glPushMatrix();
   glColor3f(0, 0, 1);
@@ -560,12 +460,7 @@ void idle () {
   glutPostRedisplay();
 }
 
-
-/*
- *  GLUT calls this routine when an arrow key is pressed
- */
 void special(int key, int x, int y) {
-  // Right arrow key - increase angle by 5 degrees
   if (mode == 2) {
     if (key == GLUT_KEY_RIGHT)
       fp_th += 5;
@@ -593,9 +488,6 @@ void special(int key, int x, int y) {
   glutPostRedisplay();
 }
 
-/*
- *  GLUT calls this routine when a key is pressed
- */
 void key(unsigned char ch, int x, int y) {
   double step = 0.1;  
   if (ch == 27) {
@@ -617,7 +509,6 @@ void key(unsigned char ch, int x, int y) {
     AY = 0;
     AZ = 0;
   }
-  
   else if (ch == 'm' || ch == 'M') {
     mode = (mode + 1) % 3;
   }
@@ -627,8 +518,6 @@ void key(unsigned char ch, int x, int y) {
             EZ -= step * Cos(fp_th);
             AX = EX + Sin(fp_th);  
             AZ = EZ - Cos(fp_th);
-        } else {
-            // No movement in other modes
         }
     }
     else if (ch == 's' || ch == 'S') {  
@@ -658,20 +547,16 @@ void key(unsigned char ch, int x, int y) {
   else if (ch == 'r' || ch == 'R') {
     light_move = 1-light_move;
   }
-// Increase light distance (orbiting radius)
 else if (ch == 'j' || ch == 'J') {
     light_distance++;
 }
-// Decrease light distance (orbiting radius)
 else if (ch == 'k' || ch == 'K') {
     if (light_distance > 0)
         light_distance--;
 }
-// Increase light height
 else if (ch == 'u' || ch == 'U') {
     light_height++;
 }
-// Decrease light height
 else if (ch == 'g' || ch == 'G') {
     light_height--;
 }
@@ -702,49 +587,27 @@ void ErrCheck(const char* where)
 }
 
 void reshape(int width,int height) {
-  //  Ratio of the width to the height of the window
   asp = (height>0) ? (double)width/height : 1;
-  //  Set the viewport to the entire window
   glViewport(0,0, width,height);
-  //  Tell OpenGL we want to manipulate the projection matrix
   glMatrixMode(GL_PROJECTION);
-  //  Undo previous transformations
   glLoadIdentity();
-  //  Switch to manipulating the model matrix
   glMatrixMode(GL_MODELVIEW);
-  //  Undo previous transformations
   glLoadIdentity();
-  //  Set the viewport to the entire window
   glViewport(0,0, width,height);
-  //  Set projection
   projection();
 }
 
-/*
- *  Start up GLUT and tell it what to do
- */
 int main (int argc, char *argv[]) {
-
-  // Initialize GLUT and process user parameters
   glutInit(&argc,argv);
-  // Request double buffered, true color window with Z buffering
   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
-  // Request 800 x 800 pixel window
   glutInitWindowSize(800, 800);
-  // Create the window
   glutCreateWindow("Homework 3: Sanjay Baskaran");
-  // Set background color to RGB(11,29,81)
   glClearColor(0.043f, 0.114f, 0.318f, 1.0f);
-  // Tell GLUT to call "display" when the scene should be drawn
   glutDisplayFunc(display);
-  // Tell GLUT to call "reshape" when the window is resized
   glutReshapeFunc(reshape);
-  // Tell GLUT to call "special" when an arrow key is pressed
   glutSpecialFunc(special);
-  // Tell GLUT to call "key" when a key is pressed
   glutKeyboardFunc(key);
   glutIdleFunc(idle);
-  
 
   leafTexture = LoadTexBMP("textures/leaf.bmp");
   woodTexture = LoadTexBMP("textures/wood.bmp");
@@ -754,10 +617,5 @@ int main (int argc, char *argv[]) {
   cloudTexture = LoadTexBMP("textures/cloud.bmp");
 
   glutMainLoop();
-  // Return code
-
   return 0;
 }
-
-
-
