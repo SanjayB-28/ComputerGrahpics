@@ -34,7 +34,7 @@ static void CubeOutline(double x,double y,double z,
 {
     glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
     glEnable(GL_POLYGON_OFFSET_LINE);
-    glPolygonOffset(-0.2f,-0.2f);
+    glPolygonOffset(-2.0f,-2.0f);
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glDisable(GL_LIGHTING);
     glLineWidth(1.0f);
@@ -73,22 +73,18 @@ void drawMonitor(double x,double y,double z,double s,double th)
     glRotated(th,0,1,0);
     glScaled(s,s,s);
 
-    /* ── 1. bezel + outline ─────────────────── */
     glColor3f(0.10,0.10,0.10);
-    Cube(0,1.0,0, 1.2,0.7,0.05,0);
-    CubeOutline(0,1.0,0, 1.2,0.7,0.05,0);
+    Cube(0,1.0,0,  1.2,0.7,0.05, 0);
 
-    /* ── 2. stand neck & base + outlines ────── */
     glColor3f(0.30,0.30,0.30);
-    Cube(0,0.3,-0.1, 0.1,0.3,0.05,0);
-    CubeOutline(0,0.3,-0.1, 0.1,0.3,0.05,0);
+    Cube(0,0.3,-0.1,  0.10,0.30,0.05, 0);       // stand
 
-    Cube(0,0,0, 0.5,0.05,0.3,0);
-    CubeOutline(0,0,0, 0.5,0.05,0.3,0);
+    Cube(0,0,0,       0.50,0.05,0.30, 0);      // base
+    CubeOutline(0,0,0, 0.50,0.05,0.30, 0);     // outline for base
 
-    /* ── 3. screen panel (drawn last) ───────── */
     glColor3f(0.50,0.80,1.0);
-    Cube(0,1.0,0.07, 1.1,0.6,0.01,0);   // 0.07 → ~2 mm in front of bezel
+    Cube(0,1.0,0.07,  1.1,0.6,0.01, 0);         // screen
+    CubeOutline(0,1.0,0.07,  1.1,0.6,0.01, 0); // outline for screen
 
     glPopMatrix();
 }
@@ -187,12 +183,30 @@ void drawNotebook(double x,double y,double z,
     glPushMatrix();
     glTranslated(x,y,z); glRotated(th,0,1,0);
 
-    glColor3f(r,g,b);
-    Cube(0,dy/2,0, dx/2,dy/2,dz/2,0);
-    CubeOutline(0,dy/2,0, dx/2,dy/2,dz/2,0);
+    // Thicknesses
+    double cover_thick = 0.04 * dy; // 4% of height
+    double page_gap = 0.01 * dy;    // gap between covers and pages
 
+    // Top cover
+    glColor3f(r,g,b);
+    Cube(0, dy - cover_thick/2, 0, dx/2, cover_thick/2, dz/2, 0);
+    CubeOutline(0, dy - cover_thick/2, 0, dx/2, cover_thick/2, dz/2, 0);
+
+    // Bottom cover
+    glColor3f(r,g,b);
+    Cube(0, cover_thick/2, 0, dx/2, cover_thick/2, dz/2, 0);
+    CubeOutline(0, cover_thick/2, 0, dx/2, cover_thick/2, dz/2, 0);
+
+    // Binding (on the left side, as thin as the cover)
+    glColor3f(r,g,b);
+    Cube(-dx/2 + cover_thick/2, dy/2, 0, cover_thick/2, (dy - 2*cover_thick)/2, dz/2, 0);
+    CubeOutline(-dx/2 + cover_thick/2, dy/2, 0, cover_thick/2, (dy - 2*cover_thick)/2, dz/2, 0);
+
+    // Pages (start right after the binding)
     glColor3f(0.9,0.9,0.9);
-    Cube(0.05,dy/2,0, dx/2-0.05,dy/2-0.02,dz/2-0.02,0);
+    Cube(-dx/2 + cover_thick + (dx - 2*cover_thick)/2, dy/2, 0,
+         (dx - 2*cover_thick)/2, (dy - 2*cover_thick)/2 - page_gap, dz/2 - 0.02, 0);
+
     glPopMatrix();
 }
 
