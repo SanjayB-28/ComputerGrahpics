@@ -1,0 +1,12 @@
+# Ignore common compilation files
+*.o
+*.a
+*.obj
+*.exe
+*.out
+*.class
+*.dll
+*.so
+*.dylib
+/build/
+bin/
