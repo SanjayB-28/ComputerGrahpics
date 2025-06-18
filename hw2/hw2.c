@@ -56,7 +56,7 @@ void display()
    drawNotebook(2.0, 0.1, -0.6, 0.7, 0.12, 0.9, -15, 0.32, 0.5, 1.0);
    drawNotebook(-2.6, 0.1, -0.8, 0.9, 0.1, 0.6, 110, 0.5, 1.0, 0.5);
    drawNotebook(2.4, 0.1, 1.0, 0.9, 0.12, 1.1, -10, 0.70f, 0.60f, 1.00f);
-   drawNotebook(2.4, 0.1 + 0.12, 1.0, 0.85, 0.10, 1.05, -25, 1.00f, 0.85f, 0.35f);
+   drawNotebook(2.4, 0.25, 1.0, 0.85, 0.10, 1.05, -25, 1.00f, 0.85f, 0.35f);
 
    glWindowPos2i(5, 5);
    const char* modes[] = {"Overhead Orthogonal", "Overhead Perspective", "First Person"};

@@ -34,7 +34,7 @@ static void CubeOutline(double x,double y,double z,
 {
     glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
     glEnable(GL_POLYGON_OFFSET_LINE);
-    glPolygonOffset(-1.f,-1.f);
+    glPolygonOffset(-0.2f,-0.2f);
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     glDisable(GL_LIGHTING);
     glLineWidth(1.0f);
@@ -69,21 +69,26 @@ void drawDesk(double x,double y,double z,
 void drawMonitor(double x,double y,double z,double s,double th)
 {
     glPushMatrix();
-    glTranslated(x,y,z); glRotated(th,0,1,0); glScaled(s,s,s);
+    glTranslated(x,y,z);
+    glRotated(th,0,1,0);
+    glScaled(s,s,s);
 
-    glColor3f(0.1,0.1,0.1);
+    /* ── 1. bezel + outline ─────────────────── */
+    glColor3f(0.10,0.10,0.10);
     Cube(0,1.0,0, 1.2,0.7,0.05,0);
     CubeOutline(0,1.0,0, 1.2,0.7,0.05,0);
 
-    glColor3f(0.5,0.8,1.0);
-    Cube(0,1.0,0.06, 1.1,0.6,0.01,0);
-
-    glColor3f(0.3,0.3,0.3);
+    /* ── 2. stand neck & base + outlines ────── */
+    glColor3f(0.30,0.30,0.30);
     Cube(0,0.3,-0.1, 0.1,0.3,0.05,0);
     CubeOutline(0,0.3,-0.1, 0.1,0.3,0.05,0);
 
     Cube(0,0,0, 0.5,0.05,0.3,0);
     CubeOutline(0,0,0, 0.5,0.05,0.3,0);
+
+    /* ── 3. screen panel (drawn last) ───────── */
+    glColor3f(0.50,0.80,1.0);
+    Cube(0,1.0,0.07, 1.1,0.6,0.01,0);   // 0.07 → ~2 mm in front of bezel
 
     glPopMatrix();
 }
