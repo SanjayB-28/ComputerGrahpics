@@ -1,0 +1,20 @@
+ex37: Asteroids
+
+Willem A. (Vlakkies) Schreuder
+CSCI4229/5229 Summer 2025
+
+
+Demonstrates using Gouraud Shading and Selection
+
+Asteroid models from DAMIT database of asteroid models
+https://www.aanda.org/articles/aa/full_html/2010/05/aa12693-09/aa12693-09.html
+and
+https://astro.troja.mff.cuni.cz/projects/damit/
+
+
+Key bindings
+  mouse      Left=rotate, right=pan, wheel=zoom
+  arrows     Change view angle
+  0          Reset view angle
+  1          Back view
+  ESC        Exit
