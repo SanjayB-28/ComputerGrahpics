@@ -8,5 +8,3 @@
 *.dll
 *.so
 *.dylib
-/build/
-bin/
