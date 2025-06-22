@@ -21,9 +21,10 @@ endif
 hw3.o: hw3.c CSCIx229.h
 loadtexbmp.o: loadtexbmp.c CSCIx229.h
 print.o: print.c CSCIx229.h
-object.o: object.c CSCIx229.h
+objloader.o: objloader.c CSCIx229.h
+objects.o: objects.c objects.h
 
-CSCIx229.a:loadtexbmp.o print.o object.o 
+CSCIx229.a:loadtexbmp.o print.o objloader.o objects.o 
 	ar -rcs $@ $^
 
 .c.o:
