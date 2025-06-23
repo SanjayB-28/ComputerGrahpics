@@ -1,8 +1,5 @@
 #include "objects.h"
 
-// ... (Move all object definition functions from hw3.c here)
-// Do not redefine global texture variables, use extern as in objects.h 
-
 void Sun (double x, double y, double z, double radius) {
   const int d=5;
   glPushMatrix();

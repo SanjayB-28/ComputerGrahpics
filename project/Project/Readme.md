@@ -7,7 +7,7 @@ A real-time terrain visualization system demonstrating advanced OpenGL graphics 
 1. **Advanced Camera System**
    - Multiple view modes demonstrating mastery of 3D transformations
    - Smooth camera interpolation and collision detection
-   - Try pressing: `1` (First Person), `2` (Top Down), `3` (Free Orbit)
+   - Try pressing: `1` (First Person), `3` (Free Orbit)
 
 2. **Dynamic Environment & Lighting**
    - Realistic day/night cycle with dynamic lighting
@@ -50,7 +50,6 @@ make
 - Arrow Keys: Move camera/character
 - Mouse Drag: Look around
 - 1: First Person View
-- 2: Top-Down View
 - 3: Free Orbit View
 
 ### Environment Controls

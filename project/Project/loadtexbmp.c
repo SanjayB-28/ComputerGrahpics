@@ -1,10 +1,8 @@
-//  CSCIx229 library
-//  Willem A. (Vlakkies) Schreuder
-#include "CSCIx229.h"
+// ---------------------------------------------
+// loadtexbmp.c - BMP texture loader for OpenGL
+// ---------------------------------------------
 
-//
-//  Load texture from BMP file
-//
+#include "CSCIx229.h"
 
 //
 //  Reverse n bytes
@@ -23,6 +21,8 @@ static void Reverse(void* x,const int n)
 //
 //  Load texture from BMP file
 //
+
+// Load a 24-bit BMP file as an OpenGL texture and return the texture handle
 unsigned int LoadTexBMP(const char* file)
 {
    //  Open file

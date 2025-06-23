@@ -1,5 +1,4 @@
-//  CSCIx229 library
-//  Willem A. (Vlakkies) Schreuder
+// projection.c - Projection matrix setup for OpenGL scenes
 #include "CSCIx229.h"
 
 //

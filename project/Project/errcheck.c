@@ -1,5 +1,7 @@
-//  CSCIx239 library
-//  Willem A. (Vlakkies) Schreuder
+// ---------------------------------------------
+// errcheck.c - OpenGL error checking utility
+// ---------------------------------------------
+
 #include "CSCIx229.h"
 
 //
