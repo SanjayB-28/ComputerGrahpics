@@ -1,27 +1,42 @@
+// ---------------------------------------------
 // sky.h - Celestial object system for sun, moon, and sky rendering
+// ---------------------------------------------
+
 #ifndef CELESTIAL_H
 #define CELESTIAL_H
 
-// Celestial object system inspired by:
-// - Real-Time Rendering 4th Edition, Chapter 10: Local Illumination
-// - Enhanced with ChatGPT assistance for day/night cycle
+// --- Celestial object data structures ---
+/* Based on Real-Time Rendering 4th Ed. Ch. 10 */
+
+/* Individual celestial body (sun/moon) */
 typedef struct {
-    float position[3];
-    float size;
-    float brightness;
-    float color[4];
+    float position[3];           // Position
+    float size;                  // Diameter
+    float brightness;            // Visibility (0-1)
+    float color[4];              // RGBA color
 } SkyObject;
 
+/* Complete sky system containing celestial objects */
 typedef struct {
-    SkyObject sun;
-    SkyObject moon;
+    SkyObject sun;               // Sun
+    SkyObject moon;              // Moon
     // Add more fields if needed for stars, planets, etc.
 } SkySystem;
 
+// --- Sky system API ---
+/* Initializes sky system with default parameters */
 void skySystemInit(SkySystem* sky);
+
+/* Updates celestial body positions based on time of day */
 void skySystemUpdate(SkySystem* sky, float dayTime);
+
+/* Renders sun and moon as visible celestial bodies */
 void skySystemRenderSunAndMoon(SkySystem* sky, float dayTime);
+
+/* Configures scene lighting based on sun/moon positions */
 void skySystemUpdateLighting(SkySystem* sky);
+
+/* Frees resources used by the sky system */
 void skySystemDestroy(SkySystem* sky);
 
 #endif

@@ -5,24 +5,24 @@
 #include "CSCIx229.h"
 #include <ctype.h>
 
-// Material structure for OBJ materials
+// --- Material structures and storage ---
+/* Structure to store material properties from MTL files */
 typedef struct {
     char* name;
-    float Ka[4], Kd[4], Ks[4], Ns;
-    float d;
-    int map;
+    float Ka[4], Kd[4], Ks[4], Ns;  // Ambient, diffuse, specular components and shininess
+    float d;                         // Transparency
+    int map;                         // Texture map ID
 } mtl_t;
 
-// Material array and count
 static int Nmtl = 0;
 static mtl_t* mtl = NULL;
 
-// Return true if character is CR or LF
+// --- File parsing utilities ---
+/* Character and line processing for OBJ/MTL file parsing */
 static int CRLF(char ch) {
     return ch == '\r' || ch == '\n';
 }
 
-// Read a line from file, returns pointer or NULL on EOF
 static int linelen = 0;
 static char* line = NULL;
 static char* readline(FILE* f) {
@@ -47,7 +47,6 @@ static char* readline(FILE* f) {
     return k > 0 ? line : NULL;
 }
 
-// Extract next word from a line (modifies line)
 static char* getword(char** line) {
     while (**line && isspace(**line)) (*line)++;
     if (!**line) return NULL;
@@ -60,7 +59,7 @@ static char* getword(char** line) {
     return word;
 }
 
-// Read n floats from a line into x[]
+/* Parse floating point values from OBJ/MTL data */
 static void readfloat(char* line, int n, float x[]) {
     for (int i = 0; i < n; i++) {
         char* str = getword(&line);
@@ -69,7 +68,6 @@ static void readfloat(char* line, int n, float x[]) {
     }
 }
 
-// Read n coordinates from a line, reallocating as needed
 static void readcoord(char* line, int n, float* x[], int* N, int* M) {
     if (*N + n > *M) {
         *M += 8192;
@@ -80,7 +78,6 @@ static void readcoord(char* line, int n, float* x[], int* N, int* M) {
     (*N) += n;
 }
 
-// Read a string after a prefix (e.g., "usemtl" or "mtllib")
 static char* readstr(char* line, const char* skip) {
     while (*skip && *line && *skip == *line) {
         skip++;
@@ -90,7 +87,8 @@ static char* readstr(char* line, const char* skip) {
     return getword(&line);
 }
 
-// Load materials from a .mtl file
+// --- Material loading and management ---
+/* Load and process material definitions from MTL files */
 static void LoadMaterial(const char* file) {
     int k = -1;
     char* line;
@@ -132,7 +130,7 @@ static void LoadMaterial(const char* file) {
     fclose(f);
 }
 
-// Set OpenGL material properties by name
+/* Apply a material to the current OpenGL state */
 static void SetMaterial(const char* name) {
     for (int k = 0; k < Nmtl; k++) {
         if (!strcmp(mtl[k].name, name)) {
@@ -152,13 +150,15 @@ static void SetMaterial(const char* name) {
     fprintf(stderr, "Unknown material %s\n", name);
 }
 
-// Load a Wavefront OBJ file and return OpenGL display list
+// --- Main OBJ loading function ---
+/* Loads a Wavefront OBJ file into an OpenGL display list
+   Handles geometry, normals, texture coordinates and materials */
 int LoadOBJ(const char* file) {
-    int Nv, Nn, Nt;
-    int Mv, Mn, Mt;
-    float* V;
-    float* N;
-    float* T;
+    int Nv, Nn, Nt;        // Current count of vertices, normals, textures
+    int Mv, Mn, Mt;        // Allocated memory for vertices, normals, textures
+    float* V;              // Vertex coordinates
+    float* N;              // Normal vectors
+    float* T;              // Texture coordinates
     char* line;
     char* str;
     FILE* f = fopen(file, "r");
@@ -212,6 +212,8 @@ int LoadOBJ(const char* file) {
     fclose(f);
     glPopAttrib();
     glEndList();
+    
+    /* Cleanup allocated resources */
     for (int k = 0; k < Nmtl; k++)
         free(mtl[k].name);
     free(mtl);

@@ -30,6 +30,7 @@
 #include <math.h>
 
 // --- Global state ---
+/* Environmental systems and rendering resources */
 static SkyCloudSystem* cloudSystem = NULL;
 static SkySystem skySystemInstance;
 
@@ -58,6 +59,7 @@ static int showAxes = 0;
 static int animateLight = 1;
 static float lightSpeed = 1.0f; 
 
+/* Weather and particle system configuration */
 #define SNOW_PARTICLES 20000
 #define RAIN_PARTICLES 12000
 static WeatherParticleSystem* snowSystem = NULL;
@@ -67,28 +69,34 @@ static int rainEnabled = 0;
 static int weatherType = 0;
 static float weatherIntensity = 1.0f;
 
+/* World and scene objects */
 Landscape* landscape = NULL;
 static ForestSystem* forest = NULL;
 
+/* Timing utilities */
 static float lastTime = 0;
 static float deltaTime = 0;
 
+/* Atmospheric effects */
 float fogDensity = 0.005f;
 int fogEnabled = 0;
 
 static int animateTime = 1;
 static float timeSpeed = 1.0f;
 
+/* Camera system and mouse interaction */
 static ViewCamera* camera = NULL;
 float asp;
 static int lastX = 0, lastY = 0;
 static int mouseButtons = 0;
 
+/* Environment object collections */
 static RockField* rocks = NULL;
 static ShrubField* shrubs = NULL;
 static LogField* logs = NULL;
 
 // --- Persistent camera state for view switching ---
+/* Stores view settings to allow seamless switching between camera modes */
 static float lastOrbitYaw = 45.0f, lastOrbitPitch = 10.0f, lastOrbitDistance = 70.0f;
 static int lastOrbitTh = 45, lastOrbitPh = 10;
 static float lastOrbitDim = 70.0f;
@@ -116,6 +124,7 @@ typedef struct {
 Star stars[MAX_STARS];
 
 // --- Window reshape handler ---
+/* Updates projection matrix when window size changes */
 void reshape(int width, int height) {
     asp = (height>0) ? (double)width/height : 1;
     glViewport(0,0, RES*width,RES*height);
@@ -127,16 +136,19 @@ void reshape(int width, int height) {
 }
 
 // --- Timing utilities ---
+/* Calculates time between frames for smooth animation */
 void updateDeltaTime() {
     float currentTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 }
 
+/* Maps 24-hour time to 0.0-1.0 range for shader inputs */
 float getNormalizedDayTime(float time) {
     return time / 24.0f;
 }
 
+/* Smooth transition function for natural blending */
 float smoothstep(float edge0, float edge1, float x) {
     float t = (x - edge0) / (edge1 - edge0);
     t = t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
@@ -144,17 +156,18 @@ float smoothstep(float edge0, float edge1, float x) {
 }
 
 // --- Sky color interpolation for day/night cycle ---
+/* Computes sky color based on time of day with smooth transitions */
 void getSkyColor(float time, float* color) {
     float t = time / 24.0f;  
     const int NUM_COLORS = 6;
     float timePoints[6] = {0.0f, 0.25f, 0.4f, 0.6f, 0.75f, 1.0f};  
     float colors[6][3] = {
-        {0.02f, 0.02f, 0.1f},  
-        {0.7f, 0.4f, 0.4f},    
-        {0.4f, 0.7f, 1.0f},    
-        {0.4f, 0.7f, 1.0f},    
-        {0.7f, 0.4f, 0.4f},    
-        {0.02f, 0.02f, 0.1f}   
+        {0.02f, 0.02f, 0.1f},  // Night
+        {0.7f, 0.4f, 0.4f},    // Dawn
+        {0.4f, 0.7f, 1.0f},    // Day
+        {0.4f, 0.7f, 1.0f},    // Day
+        {0.7f, 0.4f, 0.4f},    // Dusk
+        {0.02f, 0.02f, 0.1f}   // Night
     };
     int i;
     for(i = 0; i < NUM_COLORS-1; i++) {
@@ -181,6 +194,7 @@ void getSkyColor(float time, float* color) {
 }
 
 // --- Update ambient and diffuse lighting for day/night ---
+/* Adjusts scene lighting based on time of day */
 void updateDayCycle() {
     dayTime += deltaTime * 0.1f;  
     if (dayTime >= 24.0f) dayTime = 0.0f;
@@ -210,6 +224,7 @@ void updateDayCycle() {
 }
 
 // --- Dynamic sun/moon lighting ---
+/* Updates light source position and parameters based on time of day */
 void updateDynamicLighting(float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
@@ -225,10 +240,11 @@ void updateDynamicLighting(float dayTime) {
     float diffuse[4];
     float specular[4];
     if (sunHeight > 0) {
+        // Sun is the primary light source during day
         lightPos[0] = sunX;
         lightPos[1] = sunY;
         lightPos[2] = sunZ;
-        lightPos[3] = 0.0f;  
+        lightPos[3] = 0.0f;  // Directional light
         float intensity = 0.5f + sunHeight * 0.5f;
         ambient[0] = 0.15f + sunHeight * 0.15f;
         ambient[1] = 0.15f + sunHeight * 0.15f;
@@ -244,6 +260,7 @@ void updateDynamicLighting(float dayTime) {
         specular[3] = 1.0f;
     }
     else {
+        // Moon is the primary light source at night
         lightPos[0] = moonX;
         lightPos[1] = moonY;
         lightPos[2] = moonZ;
@@ -251,7 +268,7 @@ void updateDynamicLighting(float dayTime) {
         float moonIntensity = 0.15f + (-sunHeight) * 0.1f;
         ambient[0] = 0.02f;
         ambient[1] = 0.02f;
-        ambient[2] = 0.04f; 
+        ambient[2] = 0.04f; // Slightly blue for night
         ambient[3] = 1.0f;
         diffuse[0] = moonIntensity * 0.7f;
         diffuse[1] = moonIntensity * 0.7f;
@@ -273,6 +290,7 @@ void updateDynamicLighting(float dayTime) {
 }
 
 // --- Animate tree swaying for wind effect ---
+/* Updates tree tilt angles based on wind strength and time */
 void updateTreeAnimation() {
     static float windTime = 0.0f;
     windTime += deltaTime;
@@ -285,6 +303,7 @@ void updateTreeAnimation() {
 }
 
 // --- Lighting/material setup ---
+/* Configures OpenGL lighting state for the scene */
 void setupLighting() {
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
@@ -299,6 +318,7 @@ void setupLighting() {
 }
 
 // --- Fog effect for atmosphere ---
+/* Configures fog parameters based on time of day */
 void updateFog(float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
@@ -331,6 +351,7 @@ void updateFog(float dayTime) {
 }
 
 // --- OpenGL state initialization ---
+/* Sets up global rendering state for the scene */
 void initGL() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -343,6 +364,7 @@ void initGL() {
 }
 
 // --- Main display/render function ---
+/* Renders the complete scene with all objects and effects */
 void display() {
     float skyColor[3];
     getSkyColor(dayTime, skyColor);
@@ -447,11 +469,13 @@ void display() {
 }
 
 // --- Sky shader loader ---
+/* Initializes the sky background shader program */
 void initSkyBackground() {
     skyShader = loadShader("shaders/sky_shader.vert", "shaders/sky_shader.frag");
 }
 
 // --- Mouse button handler ---
+/* Processes mouse button events for camera control */
 void mouse(int button, int state, int x, int y) {
     lastX = x;
     lastY = y;
@@ -475,6 +499,7 @@ void mouse(int button, int state, int x, int y) {
 }
 
 // --- Mouse drag handler ---
+/* Processes mouse movement for camera rotation and zoom */
 void mouseMotion(int x, int y) {
     int dx = x - lastX;
     int dy = y - lastY;
@@ -506,6 +531,7 @@ void mouseMotion(int x, int y) {
 }
 
 // --- Keyboard special keys (arrows, page up/down) ---
+/* Processes special key presses for camera movement */
 void special(int key, int x, int y) {
     float deltaTime = 0.016f;
     if (camera && camera->mode == CAMERA_MODE_FREE_ORBIT) {
@@ -568,9 +594,10 @@ void special(int key, int x, int y) {
 }
 
 // --- Keyboard handler for all main controls ---
+/* Processes standard key presses for scene control and effects */
 void keyboard(unsigned char key, int x, int y) {
     switch(key) {
-        case 27:
+        case 27:  // ESC key
             exit(0);
             break;
         case 'w':
@@ -694,6 +721,7 @@ void keyboard(unsigned char key, int x, int y) {
 }
 
 // --- Idle handler for animation and updates ---
+/* Updates all animated systems between frames */
 void idle() {
     if (animateTime) {
         dayTime += deltaTime * timeSpeed;
@@ -718,6 +746,7 @@ void idle() {
 }
 
 // --- Weather system initialization ---
+/* Creates and configures the particle systems for weather effects */
 void initWeatherSystem() {
     printf("Initializing weather system...\n");
     snowSystem = weatherParticleSystemCreate(SNOW_PARTICLES, WEATHER_PARTICLE_SNOW);
@@ -732,6 +761,7 @@ void initWeatherSystem() {
 }
 
 // --- Main entry point ---
+/* Program initialization and main loop entry */
 int main(int argc, char* argv[]) {
     glutInit(&argc,argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
@@ -739,6 +769,8 @@ int main(int argc, char* argv[]) {
     int screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
     glutInitWindowSize(screenWidth, screenHeight);
     glutCreateWindow("Project: Sanjay Baskaran");
+    
+    // Initialize all major subsystems
     landscape = landscapeCreate();
     if (!landscape) {
         fprintf(stderr, "Failed to create landscape\n");
@@ -749,6 +781,8 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Failed to create camera\n");
         return 1;
     }
+    
+    // Set up initial camera configuration
     lastOrbitYaw = INIT_ORBIT_YAW;
     lastOrbitPitch = INIT_ORBIT_PITCH;
     lastOrbitDistance = INIT_ORBIT_DISTANCE;
@@ -767,11 +801,15 @@ int main(int argc, char* argv[]) {
     dim = lastOrbitDim;
     viewCameraSetMode(camera, CAMERA_MODE_FREE_ORBIT);
     viewCameraUpdateVectors(camera);
+    
+    // Initialize vegetation systems
     forest = forestSystemCreate();
     if (!forest) {
         fprintf(stderr, "Failed to create forest system\n");
         return 1;
     }
+    
+    // Initialize weather systems
     printf("Initializing weather system...\n");
     snowSystem = weatherParticleSystemCreate(SNOW_PARTICLES, WEATHER_PARTICLE_SNOW);
     if (!snowSystem) {
@@ -787,12 +825,16 @@ int main(int argc, char* argv[]) {
     }
     rainSystem->emitterY = lightHeight;
     rainSystem->emitterRadius = LANDSCAPE_SCALE * 0.5f;
+    
+    // Initialize sky and cloud systems
     skySystemInit(&skySystemInstance);
     cloudSystem = skyCloudSystemCreate(LANDSCAPE_SCALE * 0.4f);
     if (!cloudSystem) {
         fprintf(stderr, "Failed to create cloud system\n");
         return 1;
     }
+    
+    // Load shaders and textures
     terrainShader = loadShader("shaders/terrain_shader.vert", "shaders/terrain_shader.frag");
     if (!terrainShader) {
         fprintf(stderr, "Failed to load terrain shaders\n");
@@ -815,6 +857,8 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Failed to load sand texture\n");
         return 1;
     }
+    
+    // Generate scene content
     forestSystemGenerate(forest, landscape);
     setupLighting();
     float mSpecular[] = {0.3f, 0.3f, 0.3f, 1.0f};
@@ -824,12 +868,16 @@ int main(int argc, char* argv[]) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
     lastTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
+    
+    // Initialize decorative scene elements
     rocks = rockFieldCreate(120);
     rockFieldGenerate(rocks, landscape);
     shrubs = shrubFieldCreate(100);
     shrubFieldGenerate(shrubs, landscape);
     logs = logFieldCreate(100);
     logFieldGenerate(logs, landscape);
+    
+    // Set up GLUT callbacks
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutSpecialFunc(special);
@@ -838,7 +886,11 @@ int main(int argc, char* argv[]) {
     glutMouseFunc(mouse);
     glutMotionFunc(mouseMotion);
     glutPassiveMotionFunc(NULL);
+    
+    // Enter main loop
     glutMainLoop();
+    
+    // Cleanup resources
     weatherParticleSystemDestroy(snowSystem);
     weatherParticleSystemDestroy(rainSystem);
     forestSystemDestroy(forest);
@@ -851,5 +903,6 @@ int main(int argc, char* argv[]) {
     shrubFieldDestroy(shrubs);
     logFieldDestroy(logs);
     skySystemDestroy(&skySystemInstance);
+    
     return 0;
 }

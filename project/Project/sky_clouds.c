@@ -16,6 +16,7 @@
 #endif
 
 // --- Cloud system creation ---
+/* Creates a cloud system with random formations */
 SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
     SkyCloudSystem* cs = (SkyCloudSystem*)malloc(sizeof(SkyCloudSystem));
     if (!cs) return NULL;
@@ -36,6 +37,7 @@ SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
 }
 
 // --- Cloud update logic ---
+/* Updates cloud positions and recycles clouds outside bounds */
 void skyCloudSystemUpdate(SkyCloudSystem* cs, float deltaTime, float dayTime) {
     for (int i = 0; i < cs->cloudCount; i++) {
         SkyCloud* cloud = &cs->clouds[i];
@@ -50,6 +52,7 @@ void skyCloudSystemUpdate(SkyCloudSystem* cs, float deltaTime, float dayTime) {
 }
 
 // --- Cloud rendering ---
+/* Renders clouds as multi-layered billboards */
 void skyCloudSystemRender(SkyCloudSystem* cs, float dayTime) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -88,6 +91,7 @@ void skyCloudSystemRender(SkyCloudSystem* cs, float dayTime) {
 }
 
 // --- Cloud system cleanup ---
+/* Frees cloud system memory */
 void skyCloudSystemDestroy(SkyCloudSystem* cs) {
     if (cs) {
         free(cs);

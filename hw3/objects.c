@@ -102,45 +102,47 @@ void Cone (double x, double y, double z, double radius, double height) {
   glTranslatef(x, y, z);
   glScalef(radius, height, radius);
 
+  // Base
   glBegin(GL_TRIANGLE_FAN);
   glTexCoord2f(0.5, 0.5);
   glVertex3f(0, 0, 0);
-
   for (int th=0; th<=360; th+=d) {
     glColor3f(1, 1, 1);
-
-    float shininess[] = {0};
+    float shininess[] = {32};
     float color[] = {1, 1, 1, 1.0};
     float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
     glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT,GL_SPECULAR, color);
     glMaterialfv(GL_FRONT,GL_EMISSION, emit);
-
-    glNormal3d(Sin(th), 0, Cos(th));
+    glNormal3d(0, -1, 0); // base normal
     glTexCoord2f(Sin(th)+0.5, Cos(th)+0.5);
     glVertex3f(Sin(th), 0, Cos(th));
   }
   glEnd();
 
+  // Side
   glBegin(GL_TRIANGLE_FAN);
   glTexCoord2f(0.5, 0.5);
   glVertex3f(0, 1, 0);
   for (int th=0; th<=360; th+=d) {
     glColor3f(1, 1, 1);
-
-    float shininess[] = {0};
+    float shininess[] = {32};
     float color[] = {1, 1, 1, 1.0};
     float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
     glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT,GL_SPECULAR, color);
     glMaterialfv(GL_FRONT,GL_EMISSION, emit);
-
-    glNormal3d(Sin(th), 0, Cos(th));
+    // Correct normal for cone side
+    double nx = Sin(th);
+    double ny = radius / height;
+    double nz = Cos(th);
+    double len = sqrt(nx*nx + ny*ny + nz*nz);
+    nx /= len; ny /= len; nz /= len;
+    glNormal3d(nx, ny, nz);
     glTexCoord2f(Sin(th)+0.5, Cos(th)+0.5);
     glVertex3f(Sin(th), 0, Cos(th));
   }
   glEnd();
-
   glPopMatrix();
 }
 
@@ -200,34 +202,64 @@ void Roof(double x, double y, double z, double width, double height, double dept
   glScalef(width, height, depth);
   glColor3f(1, 1, 1);
 
+  // Helper for normal calculation
+  #define V3(x,y,z) (float[3]){x,y,z}
+  void normal(float* a, float* b, float* c) {
+    float u[3] = {b[0]-a[0], b[1]-a[1], b[2]-a[2]};
+    float v[3] = {c[0]-a[0], c[1]-a[1], c[2]-a[2]};
+    float n[3] = {
+      u[1]*v[2] - u[2]*v[1],
+      u[2]*v[0] - u[0]*v[2],
+      u[0]*v[1] - u[1]*v[0]
+    };
+    float len = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
+    glNormal3f(n[0]/len, n[1]/len, n[2]/len);
+  }
+
+  // Front triangle
+  float v0[3] = {-1, 0, +1};
+  float v1[3] = {+1, 0, +1};
+  float v2[3] = {0, +1, 0};
   glBegin(GL_TRIANGLES);
-  glNormal3f(0, 1, 0);
-  glTexCoord2f(0, 0); glVertex3f(-1, 0, +1);
-  glTexCoord2f(1, 0); glVertex3f(+1, 0, +1);
-  glTexCoord2f(0.5, 1); glVertex3f(0, +1, 0);
+  normal(v0, v1, v2);
+  glTexCoord2f(0, 0); glVertex3fv(v0);
+  glTexCoord2f(1, 0); glVertex3fv(v1);
+  glTexCoord2f(0.5, 1); glVertex3fv(v2);
   glEnd();
 
+  // Back triangle
+  float v3[3] = {-1, 0, -1};
+  float v4[3] = {+1, 0, -1};
+  float v5[3] = {0, +1, 0};
   glBegin(GL_TRIANGLES);
-  glNormal3f(0, 1, 0);
-  glTexCoord2f(0, 0); glVertex3f(-1, 0, -1);
-  glTexCoord2f(1, 0); glVertex3f(+1, 0, -1);
-  glTexCoord2f(0.5, 1); glVertex3f(0, +1, 0);
+  normal(v3, v4, v5);
+  glTexCoord2f(0, 0); glVertex3fv(v3);
+  glTexCoord2f(1, 0); glVertex3fv(v4);
+  glTexCoord2f(0.5, 1); glVertex3fv(v5);
   glEnd();
 
+  // Right quad
+  float v6[3] = {+1, 0, +1};
+  float v7[3] = {+1, 0, -1};
+  float v8[3] = {0, +1, 0};
   glBegin(GL_QUADS);
-  glNormal3f(0, 0, 1);
-  glTexCoord2f(0, 0); glVertex3f(+1, 0, +1);
-  glTexCoord2f(1, 0); glVertex3f(+1, 0, -1);
-  glTexCoord2f(1, 1); glVertex3f(0, +1, 0);
-  glTexCoord2f(0, 1); glVertex3f(0, +1, 0);
+  normal(v6, v7, v8);
+  glTexCoord2f(0, 0); glVertex3fv(v6);
+  glTexCoord2f(1, 0); glVertex3fv(v7);
+  glTexCoord2f(1, 1); glVertex3fv(v8);
+  glTexCoord2f(0, 1); glVertex3fv(v8);
   glEnd();
 
+  // Left quad
+  float v9[3] = {-1, 0, +1};
+  float v10[3] = {-1, 0, -1};
+  float v11[3] = {0, +1, 0};
   glBegin(GL_QUADS);
-  glNormal3f(0, 0, 1);
-  glTexCoord2f(0, 0); glVertex3f(-1, 0, +1);
-  glTexCoord2f(1, 0); glVertex3f(-1, 0, -1);
-  glTexCoord2f(1, 1); glVertex3f(0, +1, 0);
-  glTexCoord2f(0, 1); glVertex3f(0, +1, 0);
+  normal(v9, v10, v11);
+  glTexCoord2f(0, 0); glVertex3fv(v9);
+  glTexCoord2f(1, 0); glVertex3fv(v10);
+  glTexCoord2f(1, 1); glVertex3fv(v11);
+  glTexCoord2f(0, 1); glVertex3fv(v11);
   glEnd();
 
   glPopMatrix();
