@@ -1,3 +1,4 @@
+// sky_clouds.h - Cloud system data structures and API for procedural sky rendering
 #ifndef CLOUDS_H
 #define CLOUDS_H
 
@@ -13,18 +14,18 @@ typedef struct {
     float alpha;
     float speed;
     float variation;
-} Cloud;
+} SkyCloud;
 
 typedef struct {
-    Cloud clouds[MAX_CLOUDS];
+    SkyCloud clouds[MAX_CLOUDS];
     int cloudCount;
     float baseHeight;
     float windSpeed;
-} CloudSystem;
+} SkyCloudSystem;
 
-CloudSystem* createCloudSystem(float baseHeight);
-void updateClouds(CloudSystem* cs, float deltaTime, float dayTime);
-void renderClouds(CloudSystem* cs, float dayTime);
-void freeCloudSystem(CloudSystem* cs);
+SkyCloudSystem* skyCloudSystemCreate(float baseHeight);
+void skyCloudSystemUpdate(SkyCloudSystem* cs, float deltaTime, float dayTime);
+void skyCloudSystemRender(SkyCloudSystem* cs, float dayTime);
+void skyCloudSystemDestroy(SkyCloudSystem* cs);
 
 #endif

@@ -1,43 +1,43 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+// ---------------------------------------------
+// camera.h - Camera system interface
+// ---------------------------------------------
 
-// Camera enumeration and structures adapted from:
-// - LearnOpenGL Camera System (https://learnopengl.com/Getting-started/Camera)
-// - Modified with assistance from ChatGPT for multiple view modes
+#pragma once
+
+// --- Camera modes ---
 typedef enum {
-    VIEW_FIRST_PERSON,
-    VIEW_THIRD_PERSON,
-    VIEW_TOP_DOWN,
-    VIEW_FREE_ORBIT
-} ViewMode;
+    CAMERA_MODE_FIRST_PERSON,   // FPS style
+    CAMERA_MODE_FREE_ORBIT      // Orbit/arcball style
+} CameraMode;
 
+// --- Camera movement directions ---
 typedef enum {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT
-} Direction;
+    CAMERA_MOVE_FORWARD,
+    CAMERA_MOVE_BACKWARD,
+    CAMERA_MOVE_LEFT,
+    CAMERA_MOVE_RIGHT
+} CameraMoveDir;
 
+// --- Camera state struct ---
 typedef struct {
-    float pos[3];
-    float target[3];
-    float up[3];
-    float right[3];
-    float yaw;
-    float pitch;
-    float distance;
-    ViewMode mode;
-} Camera;
+    float position[3];      // Camera position
+    float lookAt[3];        // Target/look-at point
+    float upVec[3];         // Up vector
+    float rightVec[3];      // Right vector (not always used)
+    float horizontalAngle;  // Yaw
+    float verticalAngle;    // Pitch
+    float orbitDistance;    // Distance for orbit mode
+    CameraMode mode;        // Current camera mode
+} ViewCamera;
 
-Camera* createCamera(void);
-void updateCameraVectors(Camera* cam);
-void freeCamera(Camera* cam);
-void moveCamera(Camera* cam, int direction, float deltaTime);
-void rotateCamera(Camera* cam, float deltaYaw, float deltaPitch);
-void zoomCamera(Camera* cam, float factor);
-void setCameraView(Camera* cam, ViewMode newMode);
-void updateCamera(Camera* cam, float deltaTime);
-void resetCamera(Camera* cam);
-void setProjection(Camera* cam, float fov, float aspect, float nearPlane, float farPlane);
-
-#endif
+// --- Camera API ---
+ViewCamera* viewCameraCreate(void);
+void viewCameraUpdateVectors(ViewCamera* cam);
+void viewCameraDestroy(ViewCamera* cam);
+void viewCameraMove(ViewCamera* cam, int direction, float deltaTime);
+void viewCameraRotate(ViewCamera* cam, float deltaYaw, float deltaPitch);
+void viewCameraZoom(ViewCamera* cam, float factor);
+void viewCameraSetMode(ViewCamera* cam, CameraMode newMode);
+void viewCameraUpdate(ViewCamera* cam, float deltaTime);
+void viewCameraReset(ViewCamera* cam);
+void viewCameraSetProjection(ViewCamera* cam, float fov, float aspect, float nearPlane, float farPlane);

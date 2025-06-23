@@ -1,5 +1,7 @@
-//  CSCIx239 library
-//  Willem A. (Vlakkies) Schreuder
+// ---------------------------------------------
+// fatal.c - Fatal error handling utility
+// ---------------------------------------------
+
 #include "CSCIx229.h"
 
 //

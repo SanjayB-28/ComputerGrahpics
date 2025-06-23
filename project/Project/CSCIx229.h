@@ -1,3 +1,7 @@
+// ---------------------------------------------
+// CSCIx229.h - Utility functions and OpenGL setup
+// ---------------------------------------------
+
 #ifndef CSCIx229
 #define CSCIx229
 
@@ -7,13 +11,11 @@
 #include <string.h>
 #include <math.h>
 
-// GLEW _MUST_ be included first
+// --- OpenGL and platform setup ---
 #ifdef USEGLEW
 #include <GL/glew.h>
 #endif
-//  Get all GL prototypes
 #define GL_GLEXT_PROTOTYPES
-//  Select SDL, SDL2, GLFW or GLUT
 #if defined(SDL2)
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -27,30 +29,29 @@
 #else
 #include <GL/glut.h>
 #endif
-//  Make sure GLU and GL are included
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
 #include <OpenGL/gl.h>
-// Tell Xcode IDE to not gripe about OpenGL deprecation
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #else
 #include <GL/glu.h>
 #include <GL/gl.h>
 #endif
-//  Default resolution
-//  For Retina displays compile with -DRES=2
+
+// --- Display scaling ---
 #ifndef RES
 #define RES 1
 #endif
 
-//  cos and sin in degrees
-#define Cos(th) cos(3.14159265/180*(th))
-#define Sin(th) sin(3.14159265/180*(th))
+// --- Math helpers ---
+#define Cos(th) cos(3.14159265/180*(th)) // Cosine in degrees
+#define Sin(th) sin(3.14159265/180*(th)) // Sine in degrees
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+// --- Utility API ---
 #ifdef __GNUC__
 void Print(const char* format , ...) __attribute__ ((format(printf,1,2)));
 void Fatal(const char* format , ...) __attribute__ ((format(printf,1,2))) __attribute__ ((noreturn));

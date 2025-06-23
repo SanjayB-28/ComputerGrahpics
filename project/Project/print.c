@@ -1,5 +1,4 @@
-//  CSCIx239 library
-//  Willem A. (Vlakkies) Schreuder
+// print.c - Raster text output utility for OpenGL scenes
 #include "CSCIx229.h"
 
 //
