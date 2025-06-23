@@ -9,10 +9,12 @@
 #include "landscape.h"
 #include "weather_particles.h"
 
+// Particle type identifiers
 #define WEATHER_PARTICLE_SNOW 0
 #define WEATHER_PARTICLE_RAIN 1
 
 // --- Particle system creation ---
+/* Allocates and initializes a new particle system */
 WeatherParticleSystem* weatherParticleSystemCreate(int maxParticles, int type) {
     WeatherParticleSystem* ps = (WeatherParticleSystem*)malloc(sizeof(WeatherParticleSystem));
     if (!ps) return NULL;
@@ -32,11 +34,15 @@ WeatherParticleSystem* weatherParticleSystemCreate(int maxParticles, int type) {
 }
 
 // --- Particle update logic ---
+/* Updates particle positions and lifecycle state */
 void weatherParticleSystemUpdate(WeatherParticleSystem* ps, Landscape* landscape, float deltaTime, float intensity, float time) {
     float baseWindX = sin(time * 0.5f) * 2.0f;
+    
+    // Update existing particles
     for (int i = 0; i < ps->maxParticles; i++) {
         if (ps->particles[i].active) {
             if (!ps->particles[i].accumulated) {
+                // Falling particles with wind influence
                 float heightFactor = ps->particles[i].y / 100.0f;
                 float windX = baseWindX * (1.0f + heightFactor);
                 ps->particles[i].vy -= (2.5f + ((float)rand()/RAND_MAX)) * deltaTime;
@@ -44,6 +50,8 @@ void weatherParticleSystemUpdate(WeatherParticleSystem* ps, Landscape* landscape
                 ps->particles[i].x += ps->particles[i].vx * deltaTime;
                 ps->particles[i].y += ps->particles[i].vy * deltaTime;
                 ps->particles[i].z += ps->particles[i].vz * deltaTime;
+                
+                // Check ground collision
                 float groundHeight = landscapeGetHeight(landscape, ps->particles[i].x, ps->particles[i].z);
                 if (ps->particles[i].y < groundHeight) {
                     ps->particles[i].y = groundHeight;
@@ -52,9 +60,12 @@ void weatherParticleSystemUpdate(WeatherParticleSystem* ps, Landscape* landscape
                     ps->particles[i].life = 5.0f;
                 }
             } else {
+                // Fade out accumulated particles
                 ps->particles[i].life -= deltaTime * 0.2f;
                 ps->particles[i].alpha = ps->particles[i].life * 0.2f;
             }
+            
+            // Remove expired or out-of-bounds particles
             if (ps->particles[i].life <= 0 || 
                 fabs(ps->particles[i].x) > LANDSCAPE_SCALE/2 || 
                 fabs(ps->particles[i].z) > LANDSCAPE_SCALE/2) {
@@ -63,11 +74,14 @@ void weatherParticleSystemUpdate(WeatherParticleSystem* ps, Landscape* landscape
             }
         }
     }
+    
+    // Spawn new particles
     int maxNewParticles = (int)(ps->maxParticles * intensity * 0.1f);
     int newParticles = 0;
     while (ps->activeParticles < ps->maxParticles * intensity && newParticles < maxNewParticles) {
         for (int i = 0; i < ps->maxParticles; i++) {
             if (!ps->particles[i].active) {
+                // Initialize new particle
                 float x = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 0.95f;
                 float z = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 0.95f;
                 float y = landscapeGetHeight(landscape, x, z) + 
@@ -92,9 +106,12 @@ void weatherParticleSystemUpdate(WeatherParticleSystem* ps, Landscape* landscape
 }
 
 // --- Particle rendering ---
+/* Renders particles based on type (snow or rain) */
 void weatherParticleSystemRender(WeatherParticleSystem* ps) {
     if (!ps) return;
+    
     if (ps->type == WEATHER_PARTICLE_SNOW) {
+        // Render snow as points
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDisable(GL_DEPTH_TEST);
@@ -105,6 +122,7 @@ void weatherParticleSystemRender(WeatherParticleSystem* ps) {
         glBegin(GL_POINTS);
         for (int i = 0; i < ps->maxParticles; i++) {
             if (ps->particles[i].active) {
+                // Distance-based fade
                 float dx = ps->particles[i].x;
                 float dy = ps->particles[i].y;
                 float dz = ps->particles[i].z;
@@ -122,6 +140,7 @@ void weatherParticleSystemRender(WeatherParticleSystem* ps) {
         glEnable(GL_LIGHTING);
         glDisable(GL_BLEND);
     } else if (ps->type == WEATHER_PARTICLE_RAIN) {
+        // Render rain as short lines
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDisable(GL_DEPTH_TEST);
@@ -130,6 +149,7 @@ void weatherParticleSystemRender(WeatherParticleSystem* ps) {
         glBegin(GL_LINES);
         for (int i = 0; i < ps->maxParticles; i++) {
             if (ps->particles[i].active && !ps->particles[i].accumulated) {
+                // Draw streaks with faded tails
                 float tail = 1.0f + ps->particles[i].size * 0.7f;
                 float alpha = 0.5f * ps->particles[i].alpha;
                 glColor4f(0.5f, 0.6f, 1.0f, alpha);
@@ -147,6 +167,7 @@ void weatherParticleSystemRender(WeatherParticleSystem* ps) {
 }
 
 // --- Particle system cleanup ---
+/* Frees particle system resources */
 void weatherParticleSystemDestroy(WeatherParticleSystem* ps) {
     if (ps) {
         if (ps->particles) free(ps->particles);

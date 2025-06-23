@@ -9,7 +9,8 @@
 #include <stdarg.h>
 #include <string.h>
 
-// --- Read text file into buffer ---
+// --- Read text file ---
+/* Loads shader source from file */
 static char* readText(const char* file)
 {
    int   n;
@@ -27,7 +28,8 @@ static char* readText(const char* file)
    return buffer;
 }
 
-// --- Print shader compile log ---
+// --- Print shader log ---
+/* Shows shader compilation errors */
 static void printShaderLog(int obj,const char* file)
 {
    int len=0;
@@ -43,7 +45,8 @@ static void printShaderLog(int obj,const char* file)
    }
 }
 
-// --- Print program link log ---
+// --- Print program log ---
+/* Shows shader linking errors */
 static void printProgramLog(int obj)
 {
    int len=0;
@@ -59,7 +62,8 @@ static void printProgramLog(int obj)
    }
 }
 
-// --- Load and compile vertex/fragment shaders ---
+// --- Load shaders ---
+/* Creates shader program from source files */
 int loadShader(const char* vertexFile, const char* fragmentFile)
 {
    int program = glCreateProgram();
@@ -82,13 +86,15 @@ int loadShader(const char* vertexFile, const char* fragmentFile)
    return program;
 }
 
-// --- Use a shader program ---
+// --- Use shader ---
+/* Activates shader for rendering */
 void useShader(int shader)
 {
    glUseProgram(shader);
 }
 
-// --- Delete a shader program ---
+// --- Delete shader ---
+/* Frees shader resources */
 void deleteShader(int shader)
 {
    glDeleteProgram(shader);

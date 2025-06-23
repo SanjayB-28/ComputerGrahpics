@@ -1,24 +1,28 @@
-// projection.c - Projection matrix setup for OpenGL scenes
+// ---------------------------------------------
+// projection.c - OpenGL projection matrix setup
+// ---------------------------------------------
+
 #include "CSCIx229.h"
 
-//
-//  Set projection
-//
+// Sets projection matrix (perspective or orthographic)
+// fov: Field of view (0 for orthographic)
+// asp: Aspect ratio
+// dim: Scene dimensions
 void Project(double fov,double asp,double dim)
 {
-   //  Tell OpenGL we want to manipulate the projection matrix
+   // Projection matrix
    glMatrixMode(GL_PROJECTION);
-   //  Undo previous transformations
+   // Reset
    glLoadIdentity();
-   //  Perspective transformation
+   // Perspective
    if (fov)
       gluPerspective(fov,asp,dim/16,16*dim);
-   //  Orthogonal transformation
+   // Orthographic
    else
       glOrtho(-asp*dim,asp*dim,-dim,+dim,-dim,+dim);
-   //  Switch to manipulating the model matrix
+   // Modelview matrix
    glMatrixMode(GL_MODELVIEW);
-   //  Undo previous transformations
+   // Reset matrix
    glLoadIdentity();
 }
 

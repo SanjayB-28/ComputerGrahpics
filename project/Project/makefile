@@ -1,45 +1,56 @@
-# Terrain Generation Project
+# ----------
+# makefile
+# ----------
+
+# Output name
 EXE=final
 
 # Main target
 all: final
 
-# Msys/MinGW
+# --- Platform configs ---
+# Windows
 ifeq "$(OS)" "Windows_NT"
-CFLG=-O3 -Wall -DUSEGLEW
-LIBS=-lfreeglut -lglew32 -lglu32 -lopengl32 -lm
-CLEAN=rm -f *.exe *.o *.a
+CFLG=-O3 -Wall -DUSEGLEW         # Windows compile flags
+LIBS=-lfreeglut -lglew32 -lglu32 -lopengl32 -lm  # Windows libraries
+CLEAN=rm -f *.exe *.o *.a        # Windows cleanup
 else
-# OSX
+# macOS
 ifeq "$(shell uname)" "Darwin"
-RES=$(shell uname -r|sed -E 's/(.).*/\1/'|tr 12 21)
-CFLG=-O3 -Wall -Wno-deprecated-declarations -DRES=$(RES)
-LIBS=-framework GLUT -framework OpenGL
-# Linux/Unix/Solaris
+RES=$(shell uname -r|sed -E 's/(.).*/\1/'|tr 12 21)  # Retina display scaling
+CFLG=-O3 -Wall -Wno-deprecated-declarations -DRES=$(RES)  # macOS flags
+LIBS=-framework GLUT -framework OpenGL     # macOS frameworks
+# Linux/Unix
 else
-CFLG=-O3 -Wall
-LIBS=-lglut -lGLU -lGL -lm
+CFLG=-O3 -Wall                   # Standard flags
+LIBS=-lglut -lGLU -lGL -lm       # Unix libraries
 endif
-# OSX/Linux/Unix/Solaris
+# Non-Windows cleanup
 CLEAN=rm -f $(EXE) *.o *.a
 endif
 
-# Dependencies
+# --- Dependencies ---
+# Core components
 main.o: main.c CSCIx229.h landscape.h objects.h weather_particles.h
 landscape.o: landscape.c landscape.h CSCIx229.h
 objects.o: objects.c objects.h landscape.h CSCIx229.h
 weather_particles.o: weather_particles.c weather_particles.h landscape.h CSCIx229.h
+
+# Utility library
 fatal.o: fatal.c CSCIx229.h
 errcheck.o: errcheck.c CSCIx229.h
 print.o: print.c CSCIx229.h
 loadtexbmp.o: loadtexbmp.c CSCIx229.h
 loadobj.o: loadobj.c CSCIx229.h
 projection.o: projection.c CSCIx229.h
+
+# Additional modules
 shaders.o: shaders.c CSCIx229.h
 sky.o: sky.c sky.h landscape.h
 sky_clouds.o: sky_clouds.c sky_clouds.h
 camera.o: camera.c camera.h
-# Create archive
+
+# Create utility library
 CSCIx229.a: fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o
 	ar -rcs $@ $^
 
@@ -49,10 +60,10 @@ CSCIx229.a: fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o
 .cpp.o:
 	g++ -c $(CFLG) $<
 
-# Link
+# Link executable
 final: main.o landscape.o objects.o weather_particles.o shaders.o sky.o sky_clouds.o camera.o sky_clouds.o CSCIx229.a
 	gcc $(CFLG) -o $@ $^ $(LIBS)
 
-# Clean
+# Cleanup
 clean:
 	$(CLEAN)

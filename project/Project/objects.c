@@ -18,14 +18,15 @@
 #include <GL/glu.h>
 #endif
 
-// Macros for color and size variety in procedural generation
+/* Tuning parameters for procedural generation variety */
 #define EXTRA_TREE_VARIETY 1
 #define COLOR_VARIETY 0.15f
 #define SIZE_VARIETY 0.25f
 #define TRUNK_VARIETY 0.25f
 #define FOLIAGE_VARIETY 0.25f
 
-// Forest system creation and initialization
+// --- Forest system implementation ---
+/* Allocates and initializes the forest data structure with memory for trees */
 ForestSystem* forestSystemCreate() {
     ForestSystem* forest = (ForestSystem*)malloc(sizeof(ForestSystem));
     if (!forest) return NULL;
@@ -58,7 +59,7 @@ ForestSystem* forestSystemCreate() {
     return forest;
 }
 
-// Generate trunk geometry for a tree type
+/* Creates cylindrical trunk geometry with random variations */
 void generateTrunk(ForestSystem* forest, int type, int* currentVertex, int* currentIndex) {
     float trunkHeight = 1.2f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
     float trunkRadius = 0.15f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * TRUNK_VARIETY);
@@ -107,7 +108,7 @@ void generateTrunk(ForestSystem* forest, int type, int* currentVertex, int* curr
     }
 }
 
-// Generate pine tree foliage geometry
+/* Generates pine tree foliage as layered conical shapes */
 void generatePineTree(ForestSystem* forest, int type, int* currentVertex, int* currentIndex) {
     float foliageHeight = 2.2f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
     float baseWidth = 1.1f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * FOLIAGE_VARIETY);
@@ -163,7 +164,7 @@ void generatePineTree(ForestSystem* forest, int type, int* currentVertex, int* c
     }
 }
 
-// Tree mesh generation algorithms for different types
+/* Generates fir tree with more slender shape than pine */
 void generateFirTree(ForestSystem* forest, int type, int* currentVertex, int* currentIndex) {
     float foliageHeight = 2.5f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
     float baseWidth = 0.8f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * FOLIAGE_VARIETY);
@@ -230,6 +231,7 @@ void generateFirTree(ForestSystem* forest, int type, int* currentVertex, int* cu
     }
 }
 
+/* Generates birch tree with distinctive white trunk and round foliage */
 void generateBirchTree(ForestSystem* forest, ForestTreeType type, int* currentVertex, int* currentIndex) {
     float trunkHeight = 2.0f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
     float foliageHeight = 2.0f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
@@ -347,6 +349,7 @@ void generateBirchTree(ForestSystem* forest, ForestTreeType type, int* currentVe
     }
 }
 
+/* Creates mesh data for different tree types */
 void generateTreeMesh(ForestSystem* forest, int type) {
     int currentVertex = 0;
     int currentIndex = 0;
@@ -371,7 +374,7 @@ void generateTreeMesh(ForestSystem* forest, int type) {
     forest->indexCount[type] = currentIndex;
 }
 
-// Tree density calculation
+/* Determines tree density based on terrain height and slope */
 float getTreeDensity(float height, float slope) {
     float snowStartHeight = 12.0f;
     float treelineHeight = 20.0f;
@@ -386,6 +389,7 @@ float getTreeDensity(float height, float slope) {
     return heightFactor * slopeFactor;
 }
 
+/* Populates the landscape with trees based on terrain characteristics */
 void forestSystemGenerate(ForestSystem* forest, Landscape* landscape) {
     extern float waterLevel;
     const int maxTrees = 2000;
@@ -472,6 +476,7 @@ void forestSystemGenerate(ForestSystem* forest, Landscape* landscape) {
     generateTreeMesh(forest, FOREST_TREE_BIRCH);
 }
 
+/* Renders all trees in the forest with day/night lighting */
 void forestSystemRender(ForestSystem* forest, float dayTime) {
     float matAmbient[] = {0.4f, 0.4f, 0.4f, 1.0f};
     float matDiffuse[] = {0.7f, 0.7f, 0.7f, 1.0f};
@@ -517,6 +522,7 @@ void forestSystemRender(ForestSystem* forest, float dayTime) {
     glDisableClientState(GL_COLOR_ARRAY);
 }
 
+/* Frees all memory associated with the forest system */
 void forestSystemDestroy(ForestSystem* forest) {
     if (forest) {
         if (forest->vertices) {
@@ -538,6 +544,7 @@ void forestSystemDestroy(ForestSystem* forest) {
     }
 }
 
+/* Checks if a proposed tree location has sufficient distance from other trees */
 int forestPlacementValid(float x, float z, ForestTree* existing, int count, float minDist) {
     for (int i = 0; i < count; i++) {
         float dx = x - existing[i].x;
@@ -548,18 +555,19 @@ int forestPlacementValid(float x, float z, ForestTree* existing, int count, floa
     return 1;
 }
 
-// Helper: Check if a point is in water
+// --- Utility functions ---
+/* Check if a point is below water level */
 static bool is_in_water(float y, float waterLevel) {
     return y <= waterLevel + 0.5f;
 }
 
-// Helper: Random float in [a, b]
+/* Generate random float in specified range */
 static float randf(float a, float b) {
     return a + ((float)rand() / RAND_MAX) * (b - a);
 }
 
-// --- Rock System Implementation ---
-// Handles procedural generation and rendering of rocks
+// --- Rock system implementation ---
+/* Allocates memory for rock data structures */
 RockField* rockFieldCreate(int maxRocks) {
     RockField* field = (RockField*)malloc(sizeof(RockField));
     if (!field) return NULL;
@@ -569,13 +577,14 @@ RockField* rockFieldCreate(int maxRocks) {
     return field;
 }
 
-// Icosahedron base vertices
+/* Icosahedron vertices for basic rock shape */
 static const float rockIcosahedronBase[ROCK_VERTICES][3] = {
     {-0.525731, 0.850651, 0.0}, {0.525731, 0.850651, 0.0}, {-0.525731, -0.850651, 0.0}, {0.525731, -0.850651, 0.0},
     {0.0, -0.525731, 0.850651}, {0.0, 0.525731, 0.850651}, {0.0, -0.525731, -0.850651}, {0.0, 0.525731, -0.850651},
     {0.850651, 0.0, -0.525731}, {0.850651, 0.0, 0.525731}, {-0.850651, 0.0, -0.525731}, {-0.850651, 0.0, 0.525731}
 };
 
+/* Populates the landscape with rock formations */
 void rockFieldGenerate(RockField* field, Landscape* landscape) {
     extern float waterLevel;
     field->instanceCount = 0;
@@ -609,6 +618,7 @@ void rockFieldGenerate(RockField* field, Landscape* landscape) {
     }
 }
 
+/* Renders all rocks in the scene */
 void rockFieldRender(RockField* field) {
     extern const int rockIcosahedronIndices[ROCK_TRIANGLES][3];
     for (int i = 0; i < field->instanceCount; i++) {
@@ -643,6 +653,7 @@ void rockFieldRender(RockField* field) {
     }
 }
 
+/* Frees memory used by rock system */
 void rockFieldDestroy(RockField* field) {
     if (field) {
         if (field->instances) free(field->instances);
@@ -650,8 +661,8 @@ void rockFieldDestroy(RockField* field) {
     }
 }
 
-// --- Shrub System Implementation ---
-// Handles procedural generation and rendering of shrubs
+// --- Shrub system implementation ---
+/* Allocates memory for shrub data structures */
 ShrubField* shrubFieldCreate(int maxBushes) {
     ShrubField* field = (ShrubField*)malloc(sizeof(ShrubField));
     if (!field) return NULL;
@@ -661,6 +672,7 @@ ShrubField* shrubFieldCreate(int maxBushes) {
     return field;
 }
 
+/* Populates the landscape with shrubs and small plants */
 void shrubFieldGenerate(ShrubField* field, Landscape* landscape) {
     extern float waterLevel;
     field->instanceCount = 0;
@@ -716,6 +728,7 @@ void shrubFieldGenerate(ShrubField* field, Landscape* landscape) {
     }
 }
 
+/* Renders all shrubs in the scene */
 void shrubFieldRender(ShrubField* field) {
     for (int i = 0; i < field->instanceCount; i++) {
         ShrubObject* bush = &field->instances[i];
@@ -751,6 +764,7 @@ void shrubFieldRender(ShrubField* field) {
     }
 }
 
+/* Frees memory used by shrub system */
 void shrubFieldDestroy(ShrubField* field) {
     if (field) {
         if (field->instances) free(field->instances);
@@ -758,8 +772,8 @@ void shrubFieldDestroy(ShrubField* field) {
     }
 }
 
-// --- Log System Implementation ---
-// Handles procedural generation and rendering of logs
+// --- Log system implementation ---
+/* Allocates memory for fallen log data structures */
 LogField* logFieldCreate(int maxLogs) {
     LogField* field = (LogField*)malloc(sizeof(LogField));
     if (!field) return NULL;
@@ -769,6 +783,7 @@ LogField* logFieldCreate(int maxLogs) {
     return field;
 }
 
+/* Populates the landscape with fallen logs */
 void logFieldGenerate(LogField* field, Landscape* landscape) {
     extern float waterLevel;
     field->instanceCount = 0;
@@ -796,6 +811,7 @@ void logFieldGenerate(LogField* field, Landscape* landscape) {
     }
 }
 
+/* Renders all fallen logs in the scene */
 void logFieldRender(LogField* field) {
     for (int i = 0; i < field->instanceCount; i++) {
         LogObject* log = &field->instances[i];
@@ -832,6 +848,7 @@ void logFieldRender(LogField* field) {
     }
 }
 
+/* Frees memory used by log system */
 void logFieldDestroy(LogField* field) {
     if (field) {
         if (field->instances) free(field->instances);

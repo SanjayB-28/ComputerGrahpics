@@ -4,9 +4,8 @@
 
 #include "CSCIx229.h"
 
-//
-//  Reverse n bytes
-//
+// --- Byte order utilities ---
+/* Reverses byte order for endianness compatibility */
 static void Reverse(void* x,const int n)
 {
    char* ch = (char*)x;
@@ -18,11 +17,8 @@ static void Reverse(void* x,const int n)
    }
 }
 
-//
-//  Load texture from BMP file
-//
-
-// Load a 24-bit BMP file as an OpenGL texture and return the texture handle
+// --- Texture loading ---
+/* Loads 24-bit BMP file as OpenGL texture */
 unsigned int LoadTexBMP(const char* file)
 {
    //  Open file
@@ -39,7 +35,7 @@ unsigned int LoadTexBMP(const char* file)
        fseek(f,4,SEEK_CUR) || fread(&dx,4,1,f)!=1 || fread(&dy,4,1,f)!=1 ||
        fread(&nbp,2,1,f)!=1 || fread(&bpp,2,1,f)!=1 || fread(&k,4,1,f)!=1)
      Fatal("Cannot read header from %s\n",file);
-   //  Reverse bytes on big endian hardware (detected by backwards magic)
+   //  Reverse bytes on big endian hardware
    if (magic==0x424D)
    {
       Reverse(&off,4);
@@ -58,7 +54,7 @@ unsigned int LoadTexBMP(const char* file)
    if (bpp!=24) Fatal("%s bits per pixel is not 24: %d\n",file,bpp);
    if (k!=0)    Fatal("%s compressed files not supported\n",file);
 #ifndef GL_VERSION_2_0
-   //  OpenGL 2.0 lifts the restriction that texture size must be a power of two
+   //  Check power of two dimensions
    for (k=1;k<dx;k*=2);
    if (k!=dx) Fatal("%s image width not a power of two: %d\n",file,dx);
    for (k=1;k<dy;k*=2);

@@ -4,9 +4,11 @@
 
 #include "CSCIx229.h"
 
-//
-//  Print message to stderr and exit
-//
+// --- Error handling utilities ---
+/*
+   Prints formatted error message to stderr and terminates program
+   Used for unrecoverable errors that require immediate shutdown
+*/
 void Fatal(const char* format , ...)
 {
    va_list args;
