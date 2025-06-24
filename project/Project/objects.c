@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -79,7 +80,7 @@ void generateTrunk(ForestSystem* forest, int type, int* currentVertex, int* curr
             forest->normals[type][*currentVertex * 3 + 1] = 0.1f;
             forest->normals[type][*currentVertex * 3 + 2] = s;
             float colorVar = (rand() % 20 - 10) / 100.0f + ((float)rand() / RAND_MAX - 0.5f) * COLOR_VARIETY;
-            if (type == FOREST_TREE_BIRCH) {
+            if (type == FOREST_TREE_MAPLE) {
                 forest->colors[type][*currentVertex * 3 + 0] = 0.95f - fabs(colorVar);
                 forest->colors[type][*currentVertex * 3 + 1] = 0.95f - fabs(colorVar);
                 forest->colors[type][*currentVertex * 3 + 2] = 0.85f - fabs(colorVar) * 2.0f;
@@ -136,9 +137,9 @@ void generatePineTree(ForestSystem* forest, int type, int* currentVertex, int* c
             float randomShade = 0.9f + ((float)rand() / RAND_MAX) * 0.2f;
             float shade = heightShade * randomShade;
             float colorVar = (rand() % 20 - 10) / 100.0f + ((float)rand() / RAND_MAX - 0.5f) * COLOR_VARIETY;
-            forest->colors[type][*currentVertex * 3 + 0] = 0.35f + colorVar * 1.2f;
-            forest->colors[type][*currentVertex * 3 + 1] = 0.45f + colorVar * 1.0f;
-            forest->colors[type][*currentVertex * 3 + 2] = 0.15f + colorVar * 0.7f;
+            forest->colors[type][*currentVertex * 3 + 0] = 0.40f + colorVar * 0.2f;
+            forest->colors[type][*currentVertex * 3 + 1] = 0.40f + colorVar * 0.2f;
+            forest->colors[type][*currentVertex * 3 + 2] = 0.20f + colorVar * 0.1f;
             (*currentVertex)++;
             forest->vertices[type][*currentVertex * 3 + 0] = cosf(angle) * (radius * 0.7f);
             forest->vertices[type][*currentVertex * 3 + 1] = startHeight + (layer + 1) * layerSpacing;
@@ -195,9 +196,9 @@ void generateFirTree(ForestSystem* forest, int type, int* currentVertex, int* cu
 
             float shade = 0.7f + ((float)rand() / RAND_MAX) * 0.3f;
             float colorVar = (rand() % 20 - 10) / 100.0f + ((float)rand() / RAND_MAX - 0.5f) * COLOR_VARIETY;
-            forest->colors[type][*currentVertex * 3 + 0] = 0.20f + colorVar * 1.2f;
-            forest->colors[type][*currentVertex * 3 + 1] = 0.55f + colorVar * 1.0f;
-            forest->colors[type][*currentVertex * 3 + 2] = 0.10f + colorVar * 0.7f;
+            forest->colors[type][*currentVertex * 3 + 0] = 0.25f + colorVar * 0.1f;
+            forest->colors[type][*currentVertex * 3 + 1] = 0.45f + colorVar * 0.1f;
+            forest->colors[type][*currentVertex * 3 + 2] = 0.15f + colorVar * 0.05f;
 
             (*currentVertex)++;
 
@@ -209,9 +210,9 @@ void generateFirTree(ForestSystem* forest, int type, int* currentVertex, int* cu
             forest->normals[type][*currentVertex * 3 + 1] = ny/nlen;
             forest->normals[type][*currentVertex * 3 + 2] = nz/nlen;
 
-            forest->colors[type][*currentVertex * 3 + 0] = 0.15f * shade;
-            forest->colors[type][*currentVertex * 3 + 1] = 0.55f * shade;
-            forest->colors[type][*currentVertex * 3 + 2] = 0.45f * shade;
+            forest->colors[type][*currentVertex * 3 + 0] = 0.05f * shade;
+            forest->colors[type][*currentVertex * 3 + 1] = 0.85f * shade;
+            forest->colors[type][*currentVertex * 3 + 2] = 0.35f * shade;
 
             (*currentVertex)++;
 
@@ -231,14 +232,14 @@ void generateFirTree(ForestSystem* forest, int type, int* currentVertex, int* cu
     }
 }
 
-/* Generates birch tree with distinctive white trunk and round foliage */
-void generateBirchTree(ForestSystem* forest, ForestTreeType type, int* currentVertex, int* currentIndex) {
+/* Generates maple tree with distinctive white trunk and round foliage */
+void generateMapleTree(ForestSystem* forest, ForestTreeType type, int* currentVertex, int* currentIndex) {
     float trunkHeight = 2.0f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
-    float foliageHeight = 2.0f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
-    float baseWidth = 0.7f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * FOLIAGE_VARIETY);
-    int layers = 8 + (EXTRA_TREE_VARIETY ? rand() % 2 : 0);
+    float foliageHeight = 2.7f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * SIZE_VARIETY);
+    float baseWidth = 0.8f * (1.0f + ((float)rand() / RAND_MAX - 0.5f) * FOLIAGE_VARIETY);
+    int layers = 10 + (EXTRA_TREE_VARIETY ? rand() % 2 : 0);
     
-    float trunkRadius = 0.12f;
+    float trunkRadius = 0.13f;
     int trunkSegments = TRUNK_SEGMENTS;
 
     for (int i = 0; i <= trunkSegments; i++) {
@@ -260,9 +261,9 @@ void generateBirchTree(ForestSystem* forest, ForestTreeType type, int* currentVe
             forest->normals[type][*currentVertex * 3 + 2] = s;
 
             float darkPatch = (rand() % 20) / 100.0f;
-            forest->colors[type][*currentVertex * 3 + 0] = 0.85f - darkPatch;
-            forest->colors[type][*currentVertex * 3 + 1] = 0.85f - darkPatch;
-            forest->colors[type][*currentVertex * 3 + 2] = 0.80f - darkPatch;
+            forest->colors[type][*currentVertex * 3 + 0] = 0.65f - darkPatch;
+            forest->colors[type][*currentVertex * 3 + 1] = 0.45f - darkPatch * 0.5f;
+            forest->colors[type][*currentVertex * 3 + 2] = 0.25f - darkPatch * 0.5f;
 
             (*currentVertex)++;
         }
@@ -292,7 +293,7 @@ void generateBirchTree(ForestSystem* forest, ForestTreeType type, int* currentVe
     
     for (int layer = 0; layer < layers; layer++) {
         float heightPercent = (float)layer / layers;
-        float radius = baseWidth * (1.0f - powf(heightPercent - 0.3f, 2.0f)) * 1.2f;
+        float radius = baseWidth * (0.8f + 0.6f * heightPercent) * (1.0f - powf(heightPercent - 0.15f, 2.0f)) * 1.1f;
         int segments = FOLIAGE_SEGMENTS;
 
         for (int i = 0; i <= segments; i++) {
@@ -312,13 +313,17 @@ void generateBirchTree(ForestSystem* forest, ForestTreeType type, int* currentVe
             forest->normals[type][*currentVertex * 3 + 2] = nz/nlen;
 
             float shade = 0.8f + ((float)rand() / RAND_MAX) * 0.2f + ((float)rand() / RAND_MAX - 0.5f) * COLOR_VARIETY;
-            forest->colors[type][*currentVertex * 3 + 0] = 0.9f * shade;
-            forest->colors[type][*currentVertex * 3 + 1] = 0.7f * shade;
-            forest->colors[type][*currentVertex * 3 + 2] = 0.3f * shade;
+            float orange = 0.7f + ((float)rand() / RAND_MAX) * 0.3f;
+            float yellow = 0.5f + ((float)rand() / RAND_MAX) * 0.4f;
+            float red = 0.3f + ((float)rand() / RAND_MAX) * 0.5f;
+            float colorMix = (float)layer / layers;
+            forest->colors[type][*currentVertex * 3 + 0] = (orange * (1.0f - colorMix) + red * colorMix) * shade;
+            forest->colors[type][*currentVertex * 3 + 1] = yellow * shade;
+            forest->colors[type][*currentVertex * 3 + 2] = (0.15f + 0.2f * (1.0f - colorMix)) * shade;
 
             (*currentVertex)++;
 
-            float upperRadius = radius * (0.95f - heightPercent * 0.1f);
+            float upperRadius = radius * (0.95f - heightPercent * 0.08f);
             forest->vertices[type][*currentVertex * 3 + 0] = cosf(angle) * upperRadius * radiusVar;
             forest->vertices[type][*currentVertex * 3 + 1] = startHeight + (layer + 1) * layerSpacing;
             forest->vertices[type][*currentVertex * 3 + 2] = sinf(angle) * upperRadius * radiusVar;
@@ -327,9 +332,9 @@ void generateBirchTree(ForestSystem* forest, ForestTreeType type, int* currentVe
             forest->normals[type][*currentVertex * 3 + 1] = ny/nlen;
             forest->normals[type][*currentVertex * 3 + 2] = nz/nlen;
 
-            forest->colors[type][*currentVertex * 3 + 0] = 0.45f * shade;
-            forest->colors[type][*currentVertex * 3 + 1] = 0.75f * shade;
-            forest->colors[type][*currentVertex * 3 + 2] = 0.25f * shade;
+            forest->colors[type][*currentVertex * 3 + 0] = (orange * (1.0f - colorMix) + red * colorMix) * shade * 0.8f;
+            forest->colors[type][*currentVertex * 3 + 1] = yellow * shade * 0.8f;
+            forest->colors[type][*currentVertex * 3 + 2] = (0.15f + 0.2f * (1.0f - colorMix)) * shade * 0.8f;
 
             (*currentVertex)++;
 
@@ -360,8 +365,8 @@ void generateTreeMesh(ForestSystem* forest, int type) {
         case FOREST_TREE_FIR:
             generateFirTree(forest, type, &currentVertex, &currentIndex);
             break;
-        case FOREST_TREE_BIRCH:
-            generateBirchTree(forest, type, &currentVertex, &currentIndex);
+        case FOREST_TREE_MAPLE:
+            generateMapleTree(forest, type, &currentVertex, &currentIndex);
             break;
         case FOREST_TREE_PINE:
             generatePineTree(forest, type, &currentVertex, &currentIndex);
@@ -429,9 +434,9 @@ void forestSystemGenerate(ForestSystem* forest, Landscape* landscape) {
             } else if (y > 8.0f) {
                 if (rand_val < 0.35f) tree->type = FOREST_TREE_PINE;
                 else if (rand_val < 0.75f) tree->type = FOREST_TREE_FIR;
-                else tree->type = FOREST_TREE_BIRCH;
+                else tree->type = FOREST_TREE_MAPLE;
             } else {
-                if (rand_val < 0.45f) tree->type = FOREST_TREE_BIRCH;
+                if (rand_val < 0.45f) tree->type = FOREST_TREE_MAPLE;
                 else if (rand_val < 0.85f) tree->type = FOREST_TREE_FIR;
                 else tree->type = FOREST_TREE_PINE;
             }
@@ -446,7 +451,7 @@ void forestSystemGenerate(ForestSystem* forest, Landscape* landscape) {
             float environmentalScale = heightInfluence * slopeInfluence;
             
             switch(tree->type) {
-                case FOREST_TREE_BIRCH:
+                case FOREST_TREE_MAPLE:
                     tree->scale = randomScale * environmentalScale * 1.4f;
                     break;
                 case FOREST_TREE_PINE:
@@ -473,11 +478,11 @@ void forestSystemGenerate(ForestSystem* forest, Landscape* landscape) {
 
     generateTreeMesh(forest, FOREST_TREE_PINE);
     generateTreeMesh(forest, FOREST_TREE_FIR);
-    generateTreeMesh(forest, FOREST_TREE_BIRCH);
+    generateTreeMesh(forest, FOREST_TREE_MAPLE);
 }
 
 /* Renders all trees in the forest with day/night lighting */
-void forestSystemRender(ForestSystem* forest, float dayTime) {
+void forestSystemRender(ForestSystem* forest, float dayTime, int snowActive) {
     float matAmbient[] = {0.4f, 0.4f, 0.4f, 1.0f};
     float matDiffuse[] = {0.7f, 0.7f, 0.7f, 1.0f};
     float matSpecular[] = {0.2f, 0.2f, 0.2f, 1.0f};
@@ -498,10 +503,25 @@ void forestSystemRender(ForestSystem* forest, float dayTime) {
     for (int i = 0; i < forest->instanceCount; i++) {
         ForestTree* tree = &forest->instances[i];
         int type = tree->type;
-
+        float* vcolors = forest->colors[type];
+        int vcount = forest->vertexCount[type];
+        float blendedColors[MAX_VERTICES * 3];
+        for (int v = 0; v < vcount * 3; v += 3) {
+            float r = vcolors[v];
+            float g = vcolors[v+1];
+            float b = vcolors[v+2];
+            if (snowActive) {
+                r = r * 0.6f + 0.4f;
+                g = g * 0.6f + 0.4f;
+                b = b * 0.6f + 0.4f;
+            }
+            blendedColors[v] = r;
+            blendedColors[v+1] = g;
+            blendedColors[v+2] = b;
+        }
         glVertexPointer(3, GL_FLOAT, 0, forest->vertices[type]);
         glNormalPointer(GL_FLOAT, 0, forest->normals[type]);
-        glColorPointer(3, GL_FLOAT, 0, forest->colors[type]);
+        glColorPointer(3, GL_FLOAT, 0, snowActive ? blendedColors : forest->colors[type]);
         
         glPushMatrix();
         glTranslatef(tree->x, tree->y, tree->z);
@@ -590,6 +610,20 @@ void rockFieldGenerate(RockField* field, Landscape* landscape) {
     field->instanceCount = 0;
     int maxRocks = field->maxRocks;
     int attempts = 0;
+    // Define a palette of earthy/foliage tones (RGB)
+    const float rockPalette[][3] = {
+        {0.35f, 0.25f, 0.12f}, // brown
+        {0.18f, 0.32f, 0.13f}, // mossy green
+        {0.45f, 0.38f, 0.22f}, // tan
+        {0.25f, 0.25f, 0.25f}, // dark gray
+        {0.55f, 0.48f, 0.38f}, // light brown/gray
+        {0.60f, 0.50f, 0.20f}, // ochre
+        {0.30f, 0.28f, 0.18f}, // muted olive
+        {0.40f, 0.30f, 0.18f}, // reddish brown
+        {0.20f, 0.20f, 0.20f}, // near black
+        {0.60f, 0.55f, 0.45f}  // light tan
+    };
+    int rockPaletteSize = sizeof(rockPalette) / sizeof(rockPalette[0]);
     while (field->instanceCount < maxRocks && attempts < maxRocks * 10) {
         float x = randf(-LANDSCAPE_SCALE * 0.48f, LANDSCAPE_SCALE * 0.48f);
         float z = randf(-LANDSCAPE_SCALE * 0.48f, LANDSCAPE_SCALE * 0.48f);
@@ -603,10 +637,16 @@ void rockFieldGenerate(RockField* field, Landscape* landscape) {
         rock->xScale = randf(0.7f, 1.3f);
         rock->zScale = randf(0.7f, 1.3f);
         rock->rotation = randf(0, 360);
-        float gray = randf(0.25f, 0.6f);
-        rock->color[0] = gray + randf(-0.08f, 0.08f);
-        rock->color[1] = gray + randf(-0.08f, 0.08f);
-        rock->color[2] = gray + randf(-0.08f, 0.08f);
+        // Pick a base color from the palette
+        int paletteIdx = rand() % rockPaletteSize;
+        float baseR = rockPalette[paletteIdx][0];
+        float baseG = rockPalette[paletteIdx][1];
+        float baseB = rockPalette[paletteIdx][2];
+        // Add per-rock color variety
+        float colorVar = ((float)rand() / RAND_MAX - 0.5f) * 0.18f;
+        rock->color[0] = baseR + colorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
+        rock->color[1] = baseG + colorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
+        rock->color[2] = baseB + colorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
         for (int v = 0; v < ROCK_VERTICES; v++) {
             float scale = randf(0.85f, 1.15f);
             rock->vertices[v][0] = rockIcosahedronBase[v][0] * scale;
@@ -619,15 +659,19 @@ void rockFieldGenerate(RockField* field, Landscape* landscape) {
 }
 
 /* Renders all rocks in the scene */
-void rockFieldRender(RockField* field) {
+void rockFieldRender(RockField* field, int snowActive) {
     extern const int rockIcosahedronIndices[ROCK_TRIANGLES][3];
     for (int i = 0; i < field->instanceCount; i++) {
         RockObject* rock = &field->instances[i];
+        float color[3];
+        for (int c = 0; c < 3; c++) {
+            color[c] = snowActive ? (rock->color[c] * 0.6f + 0.4f) : rock->color[c];
+        }
         glPushMatrix();
         glTranslatef(rock->x, rock->y, rock->z);
         glRotatef(rock->rotation, 0, 1, 0);
         glScalef(rock->scale * rock->xScale, rock->scale, rock->scale * rock->zScale);
-        glColor3fv(rock->color);
+        glColor3fv(color);
         for (int t = 0; t < ROCK_TRIANGLES; t++) {
             int i0 = rockIcosahedronIndices[t][0];
             int i1 = rockIcosahedronIndices[t][1];
@@ -678,21 +722,45 @@ void shrubFieldGenerate(ShrubField* field, Landscape* landscape) {
     field->instanceCount = 0;
     int maxBushes = field->maxBushes;
     int attempts = 0;
+    // Define a palette of foliage tones (RGB)
+    const float bushPalette[][3] = {
+        {0.18f, 0.32f, 0.13f}, // deep green
+        {0.40f, 0.30f, 0.18f}, // brownish
+        {0.55f, 0.48f, 0.22f}, // yellow-green
+        {0.65f, 0.40f, 0.15f}, // orange-brown
+        {0.35f, 0.25f, 0.12f}, // brown
+        {0.60f, 0.50f, 0.20f}, // ochre
+        {0.45f, 0.38f, 0.22f}, // tan
+        {0.25f, 0.25f, 0.25f}, // dark gray
+        {0.55f, 0.48f, 0.38f}, // light brown/gray
+        {0.30f, 0.28f, 0.18f}  // muted olive
+    };
+    int bushPaletteSize = sizeof(bushPalette) / sizeof(bushPalette[0]);
     while (field->instanceCount < maxBushes && attempts < maxBushes * 10) {
         float x = randf(-LANDSCAPE_SCALE * 0.48f, LANDSCAPE_SCALE * 0.48f);
         float z = randf(-LANDSCAPE_SCALE * 0.48f, LANDSCAPE_SCALE * 0.48f);
         float y = landscapeGetHeight(landscape, x, z);
         if (is_in_water(y, waterLevel)) { attempts++; continue; }
+        // Compute slope at (x, z)
+        float dx = landscapeGetHeight(landscape, x + 1.0f, z) - landscapeGetHeight(landscape, x - 1.0f, z);
+        float dz = landscapeGetHeight(landscape, x, z + 1.0f) - landscapeGetHeight(landscape, x, z - 1.0f);
+        float slope = sqrtf(dx*dx + dz*dz) / 2.0f;
+        if (slope > 0.5f) { attempts++; continue; }
         ShrubObject* bush = &field->instances[field->instanceCount];
         bush->x = x;
         bush->y = y;
         bush->z = z;
         bush->scale = randf(0.85f, 2.0f);
         bush->rotation = randf(0, 360);
-        float g = randf(0.3f, 0.7f);
-        bush->color[0] = randf(0.05f, 0.18f);
-        bush->color[1] = g + randf(-0.08f, 0.08f);
-        bush->color[2] = randf(0.05f, 0.18f);
+        // Pick a base color from the palette
+        int paletteIdx = rand() % bushPaletteSize;
+        float baseR = bushPalette[paletteIdx][0];
+        float baseG = bushPalette[paletteIdx][1];
+        float baseB = bushPalette[paletteIdx][2];
+        float colorVar = ((float)rand() / RAND_MAX - 0.5f) * 0.18f;
+        bush->color[0] = baseR + colorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
+        bush->color[1] = baseG + colorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
+        bush->color[2] = baseB + colorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
         bush->subCount = 8 + (rand() % 5);
         for (int s = 0; s < bush->subCount; s++) {
             float angle = randf(0, 2*M_PI);
@@ -701,49 +769,53 @@ void shrubFieldGenerate(ShrubField* field, Landscape* landscape) {
             bush->subOffsets[s][1] = randf(-0.08f, 0.12f);
             bush->subOffsets[s][2] = sinf(angle) * dist;
             bush->subRadii[s] = randf(0.28f, 0.55f);
-            float baseG = randf(0.3f, 0.7f);
-            bush->subColors[s][0] = randf(0.05f, 0.18f);
-            bush->subColors[s][1] = baseG + randf(-0.15f, 0.15f);
-            bush->subColors[s][2] = randf(0.05f, 0.18f);
+            // Pick a base color for the sub-sphere
+            int subPaletteIdx = rand() % bushPaletteSize;
+            float subBaseR = bushPalette[subPaletteIdx][0];
+            float subBaseG = bushPalette[subPaletteIdx][1];
+            float subBaseB = bushPalette[subPaletteIdx][2];
+            float subColorVar = ((float)rand() / RAND_MAX - 0.5f) * 0.18f;
+            bush->subColors[s][0] = subBaseR + subColorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
+            bush->subColors[s][1] = subBaseG + subColorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
+            bush->subColors[s][2] = subBaseB + subColorVar + ((float)rand() / RAND_MAX - 0.5f) * 0.08f;
         }
-        int flowerCount = rand() % 3;
-        for (int f = 0; f < flowerCount && bush->subCount < 12; f++) {
-            int s = bush->subCount++;
-            float angle = randf(0, 2*M_PI);
-            float dist = randf(0.1f, 0.32f);
-            bush->subOffsets[s][0] = cosf(angle) * dist;
-            bush->subOffsets[s][1] = randf(0.05f, 0.18f);
-            bush->subOffsets[s][2] = sinf(angle) * dist;
-            bush->subRadii[s] = randf(0.07f, 0.13f);
-            float hue = randf(0, 1);
-            float r = fabsf(hue * 6 - 3) - 1;
-            float g = 2 - fabsf(hue * 6 - 2);
-            float b = 2 - fabsf(hue * 6 - 4);
-            bush->subColors[s][0] = fmaxf(0, fminf(1, r));
-            bush->subColors[s][1] = fmaxf(0, fminf(1, g));
-            bush->subColors[s][2] = fmaxf(0, fminf(1, b));
-        }
+        bush->mossCoverage = randf(0.0f, 0.4f);
         field->instanceCount++;
         attempts++;
     }
 }
 
 /* Renders all shrubs in the scene */
-void shrubFieldRender(ShrubField* field) {
+void shrubFieldRender(ShrubField* field, int snowActive) {
     for (int i = 0; i < field->instanceCount; i++) {
         ShrubObject* bush = &field->instances[i];
+        float color[3];
+        for (int c = 0; c < 3; c++) {
+            color[c] = snowActive ? (bush->color[c] * 0.6f + 0.4f) : bush->color[c];
+        }
         glPushMatrix();
         glTranslatef(bush->x, bush->y, bush->z);
         glRotatef(bush->rotation, 0, 1, 0);
         glScalef(bush->scale, bush->scale, bush->scale);
+        float shrubColor[3] = {color[0], color[1], color[2]};
+        if (bush->mossCoverage > 0.01f) {
+            shrubColor[0] = shrubColor[0]*(1.0f-bush->mossCoverage) + 0.2f*bush->mossCoverage;
+            shrubColor[1] = shrubColor[1]*(1.0f-bush->mossCoverage) + 0.5f*bush->mossCoverage;
+            shrubColor[2] = shrubColor[2]*(1.0f-bush->mossCoverage) + 0.2f*bush->mossCoverage;
+        }
         for (int s = 0; s < bush->subCount; s++) {
             glPushMatrix();
             glTranslatef(bush->subOffsets[s][0], bush->subOffsets[s][1], bush->subOffsets[s][2]);
-            glColor3fv(bush->subColors[s]);
-            int slices = 14, stacks = 10;
+            float subColor[3];
+            for (int c = 0; c < 3; c++) {
+                subColor[c] = snowActive ? (bush->subColors[s][c] * 0.6f + 0.4f) : bush->subColors[s][c];
+            }
+            glColor3fv(subColor);
+            // Render as full sphere
+            int slices = 14, stacks = 14;
             for (int k = 0; k < stacks; k++) {
-                float phi1 = M_PI * k / (2 * stacks);
-                float phi2 = M_PI * (k + 1) / (2 * stacks);
+                float phi1 = M_PI * k / stacks;
+                float phi2 = M_PI * (k + 1) / stacks;
                 glBegin(GL_TRIANGLE_STRIP);
                 for (int l = 0; l <= slices; l++) {
                     float theta = 2 * M_PI * l / slices;
@@ -806,43 +878,112 @@ void logFieldGenerate(LogField* field, Landscape* landscape) {
         log->color[0] = bark + randf(-0.07f, 0.07f);
         log->color[1] = bark * 0.8f + randf(-0.07f, 0.07f);
         log->color[2] = bark * 0.5f + randf(-0.07f, 0.07f);
+        log->endColor[0] = 0.7f + randf(-0.1f, 0.1f);
+        log->endColor[1] = 0.5f + randf(-0.1f, 0.1f);
+        log->endColor[2] = 0.3f + randf(-0.1f, 0.1f);
+        log->bend = randf(-0.15f, 0.15f);
+        log->barkPattern = rand() % 3;
+        log->numKnots = 1 + rand() % 4;
+        for (int k = 0; k < log->numKnots; ++k) {
+            log->knotPos[k][0] = randf(0.1f, 0.9f);
+            log->knotPos[k][1] = randf(0, 2*M_PI);
+            log->knotSize[k] = randf(0.04f, 0.09f);
+        }
+        log->mossCoverage = randf(0.0f, 0.5f);
+        log->age = randf(0.0f, 1.0f);
         field->instanceCount++;
         attempts++;
     }
 }
 
 /* Renders all fallen logs in the scene */
-void logFieldRender(LogField* field) {
+void logFieldRender(LogField* field, int snowActive) {
     for (int i = 0; i < field->instanceCount; i++) {
         LogObject* log = &field->instances[i];
+        float color[3], endColor[3];
+        for (int c = 0; c < 3; c++) {
+            color[c] = snowActive ? (log->color[c] * 0.6f + 0.4f) : log->color[c];
+            endColor[c] = snowActive ? (log->endColor[c] * 0.6f + 0.4f) : log->endColor[c];
+        }
         glPushMatrix();
         glTranslatef(log->x, log->y, log->z);
         glRotatef(log->rotation, 0, 1, 0);
         glRotatef(log->tilt, 0, 0, 1);
-        glColor3fv(log->color);
+        float ageTint = 1.0f - 0.5f * log->age;
+        float barkColor[3] = {color[0]*ageTint, color[1]*ageTint, color[2]*ageTint};
+        if (log->mossCoverage > 0.01f) {
+            barkColor[0] = barkColor[0]*(1.0f-log->mossCoverage) + 0.2f*log->mossCoverage;
+            barkColor[1] = barkColor[1]*(1.0f-log->mossCoverage) + 0.5f*log->mossCoverage;
+            barkColor[2] = barkColor[2]*(1.0f-log->mossCoverage) + 0.2f*log->mossCoverage;
+        }
         int slices = 12;
         float len = log->length, r = log->radius;
-        glBegin(GL_QUAD_STRIP);
-        for (int j = 0; j <= slices; j++) {
-            float theta = 2 * M_PI * j / slices;
-            float x = cosf(theta), z = sinf(theta);
-            glNormal3f(x, 0, z);
-            glVertex3f(x * r, 0, z * r);
-            glVertex3f(x * r, len, z * r);
-        }
-        glEnd();
-        for (int end = 0; end < 2; end++) {
-            float y = (end == 0) ? 0 : len;
-            float sign = (end == 0) ? -1.0f : 1.0f;
-            glBegin(GL_TRIANGLE_FAN);
-            glNormal3f(0, sign, 0);
-            glVertex3f(0, y, 0);
+        int segments = 8;
+        float segLen = len / segments;
+        float angleStep = log->bend / segments;
+        float y = 0;
+        float bendAngle = 0;
+        for (int s = 0; s < segments; ++s) {
+            glPushMatrix();
+            glTranslatef(0, y, 0);
+            glRotatef(bendAngle * 180.0f / M_PI, 0, 0, 1);
+            glColor3fv(barkColor);
+            glBegin(GL_QUAD_STRIP);
             for (int j = 0; j <= slices; j++) {
                 float theta = 2 * M_PI * j / slices;
                 float x = cosf(theta), z = sinf(theta);
-                glVertex3f(x * r, y, z * r);
+                glNormal3f(x, 0, z);
+                glVertex3f(x * r, 0, z * r);
+                glVertex3f(x * r, segLen, z * r);
             }
             glEnd();
+            glPopMatrix();
+            y += segLen;
+            bendAngle += angleStep;
+        }
+        for (int end = 0; end < 2; end++) {
+            float ycap = (end == 0) ? 0 : len;
+            float sign = (end == 0) ? -1.0f : 1.0f;
+            glColor3fv(endColor);
+            glBegin(GL_TRIANGLE_FAN);
+            glNormal3f(0, sign, 0);
+            glVertex3f(0, ycap, 0);
+            for (int j = 0; j <= slices; j++) {
+                float theta = 2 * M_PI * j / slices;
+                float x = cosf(theta), z = sinf(theta);
+                glVertex3f(x * r, ycap, z * r);
+            }
+            glEnd();
+        }
+        for (int k = 0; k < log->numKnots; ++k) {
+            float along = log->knotPos[k][0] * len;
+            float around = log->knotPos[k][1];
+            float kr = log->knotSize[k];
+            float kx = cosf(around) * (r + kr * 0.5f);
+            float kz = sinf(around) * (r + kr * 0.5f);
+            float ky = along;
+            glPushMatrix();
+            glTranslatef(kx, ky, kz);
+            glColor3f(barkColor[0]*0.8f, barkColor[1]*0.8f, barkColor[2]*0.8f);
+            int stacks = 6, kslices = 8;
+            for (int m = 0; m < stacks; m++) {
+                float phi1 = M_PI * m / stacks;
+                float phi2 = M_PI * (m + 1) / stacks;
+                glBegin(GL_TRIANGLE_STRIP);
+                for (int n = 0; n <= kslices; n++) {
+                    float theta = 2 * M_PI * n / kslices;
+                    for (int p = 0; p < 2; p++) {
+                        float phi = (p == 0) ? phi1 : phi2;
+                        float sx = kr * sinf(phi) * cosf(theta);
+                        float sy = kr * cosf(phi);
+                        float sz = kr * sinf(phi) * sinf(theta);
+                        glNormal3f(sx, sy, sz);
+                        glVertex3f(sx, sy, sz);
+                    }
+                }
+                glEnd();
+            }
+            glPopMatrix();
         }
         glPopMatrix();
     }
@@ -853,5 +994,158 @@ void logFieldDestroy(LogField* field) {
     if (field) {
         if (field->instances) free(field->instances);
         free(field);
+    }
+}
+
+// --- Animated Gull Flock System ---
+
+static void setGullColor(int pattern) {
+    switch (pattern) {
+        case 0: glColor3f(0.98f, 0.98f, 0.98f); break; // white
+        case 1: glColor3f(0.1f, 0.1f, 0.1f); break;    // black
+        case 2: glColor3f(0.8f, 0.2f, 0.2f); break;    // red
+        case 3: glColor3f(0.7f, 0.7f, 0.7f); break;    // gray
+        case 4: glColor3f(0.5f, 0.3f, 0.1f); break;    // brown
+        case 5: glColor3f(0.95f, 0.95f, 0.2f); break;  // yellow
+        default: glColor3f(0.98f, 0.98f, 0.98f); break;
+    }
+}
+
+static void drawProceduralGull(float wingPhase, int colorPattern) {
+    glPushMatrix();
+    glScalef(1.5f, 0.5f, 0.5f);
+    setGullColor(colorPattern);
+    glutSolidSphere(0.22, 16, 10);
+    glPushMatrix();
+    glTranslatef(0.0f, -0.09f, 0.0f);
+    glColor3f(0.95f, 0.95f, 0.95f);
+    glutSolidSphere(0.18, 14, 8);
+    glPopMatrix();
+    glPopMatrix();
+    glPushMatrix();
+    glTranslatef(0.38f, 0.09f, 0.0f);
+    setGullColor(colorPattern);
+    glutSolidSphere(0.10, 12, 10);
+    glColor3f(0.1f, 0.1f, 0.1f);
+    glPushMatrix();
+    glTranslatef(0.06f, 0.03f, 0.04f);
+    glutSolidSphere(0.018, 6, 6);
+    glPopMatrix();
+    glPushMatrix();
+    glTranslatef(0.06f, 0.03f, -0.04f);
+    glutSolidSphere(0.018, 6, 6);
+    glPopMatrix();
+    glPopMatrix();
+    glColor3f(1.0f, 0.8f, 0.2f);
+    glBegin(GL_TRIANGLES);
+    glVertex3f(0.52f, 0.11f, 0.0f);
+    glVertex3f(0.42f, 0.13f, 0.03f);
+    glVertex3f(0.42f, 0.13f, -0.03f);
+    glVertex3f(0.52f, 0.09f, 0.0f);
+    glVertex3f(0.42f, 0.07f, 0.03f);
+    glVertex3f(0.42f, 0.07f, -0.03f);
+    glEnd();
+    glPushMatrix();
+    glTranslatef(-0.08f, -0.02f, 0.0f);
+    float wingFlap = sinf(wingPhase) * 0.5f + 0.2f;
+    glBegin(GL_TRIANGLE_STRIP);
+    setGullColor(colorPattern);
+    glVertex3f(0, 0, 0);
+    glVertex3f(-0.7f, wingFlap, 0.3f);
+    glColor3f(0.1f, 0.1f, 0.1f);
+    glVertex3f(-1.2f, wingFlap * 1.2f, 0.5f);
+    glEnd();
+    glBegin(GL_TRIANGLE_STRIP);
+    setGullColor(colorPattern);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0.7f, wingFlap, 0.3f);
+    glColor3f(0.1f, 0.1f, 0.1f);
+    glVertex3f(1.2f, wingFlap * 1.2f, 0.5f);
+    glEnd();
+    glPopMatrix();
+    glColor3f(0.8f, 0.8f, 0.8f);
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex3f(-0.35f, 0, 0);
+    for (int i = 0; i <= 4; ++i) {
+        float angle = -M_PI / 4 + (M_PI / 2) * (i / 4.0f);
+        glVertex3f(-0.5f, 0, 0.12f * sinf(angle));
+    }
+    glEnd();
+    glPopMatrix();
+}
+
+GullFlock* gullFlockCreate(int numFlocks, int gullsPerFlock, float landscapeScale) {
+    int total = numFlocks * gullsPerFlock;
+    GullFlock* flock = (GullFlock*)malloc(sizeof(GullFlock));
+    flock->gulls = (Gull*)malloc(sizeof(Gull) * total);
+    flock->count = total;
+    int idx = 0;
+    float baseRadius = landscapeScale * 0.25f;
+    for (int f = 0; f < numFlocks; ++f) {
+        float cx = ((float)rand() / RAND_MAX - 0.5f) * landscapeScale * 0.95f;
+        float cz = ((float)rand() / RAND_MAX - 0.5f) * landscapeScale * 0.95f;
+        float cy = 18.0f + ((float)rand() / RAND_MAX) * 18.0f;
+        float patchRadius = baseRadius * (0.7f + 0.6f * ((float)rand()/RAND_MAX));
+        float baseAngle = ((float)rand()/RAND_MAX) * 2.0f * M_PI;
+        for (int g = 0; g < gullsPerFlock; ++g, ++idx) {
+            Gull* gull = &flock->gulls[idx];
+            gull->centerX = cx + (rand()%8 - 4);
+            gull->centerY = cy + (rand()%4 - 2);
+            gull->centerZ = cz + (rand()%8 - 4);
+            gull->radius = patchRadius * (0.8f + 0.4f * ((float)rand()/RAND_MAX));
+            gull->angle = baseAngle + g * (2.0f * M_PI / gullsPerFlock);
+            gull->speed = 0.15f + 0.3f * ((float)rand()/RAND_MAX);
+            gull->wingPhase = ((float)rand()/RAND_MAX) * 2.0f * M_PI;
+            gull->heightOffset = (rand()%3 - 1);
+            gull->colorPattern = rand() % 6;
+            gull->dirX = 1.0f; gull->dirY = 0.0f; gull->dirZ = 0.0f;
+            gull->undulationPhase = ((float)rand()/RAND_MAX) * 2.0f * M_PI;
+        }
+    }
+    return flock;
+}
+
+void gullFlockUpdate(GullFlock* flock, Landscape* landscape, float deltaTime) {
+    for (int i = 0; i < flock->count; ++i) {
+        Gull* g = &flock->gulls[i];
+        g->angle += g->speed * deltaTime;
+        if (g->angle > 2.0f * M_PI) g->angle -= 2.0f * M_PI;
+        g->x = g->centerX + g->radius * cosf(g->angle);
+        g->z = g->centerZ + g->radius * sinf(g->angle);
+        g->y = g->centerY + 0.2f * sinf(g->angle + g->undulationPhase) + g->heightOffset;
+        // Direction vector: tangent to path
+        g->dirX = cosf(g->angle);
+        g->dirY = 0.0f;
+        g->dirZ = sinf(g->angle);
+        // Clamp gull above terrain
+        if (landscape) {
+            float terrainHeight = landscapeGetHeight(landscape, g->x, g->z);
+            float minAltitude = 7.0f;
+            if (g->y < terrainHeight + minAltitude) {
+                g->y = terrainHeight + minAltitude;
+            }
+        }
+        g->wingPhase += deltaTime * 5.0f;
+        if (g->wingPhase > 2.0f * M_PI) g->wingPhase -= 2.0f * M_PI;
+    }
+}
+
+void gullFlockRender(const GullFlock* flock, int unused) {
+    for (int i = 0; i < flock->count; ++i) {
+        const Gull* g = &flock->gulls[i];
+        glPushMatrix();
+        glTranslatef(g->x, g->y, g->z);
+        float angleY = atan2f(g->dirZ, g->dirX) * 180.0f / M_PI;
+        glRotatef(angleY, 0, 1, 0);
+        glScalef(1.0f, 1.0f, 1.0f);
+        drawProceduralGull(g->wingPhase, g->colorPattern);
+        glPopMatrix();
+    }
+}
+
+void gullFlockDestroy(GullFlock* flock) {
+    if (flock) {
+        free(flock->gulls);
+        free(flock);
     }
 }
