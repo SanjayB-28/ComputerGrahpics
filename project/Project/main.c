@@ -108,6 +108,11 @@ static const float INIT_ORBIT_DIM = 70.0f;
 static const float INIT_FP_POS[3] = {0.0f, 2.0f, 0.0f};
 static const float INIT_FP_YAW = 45.0f, INIT_FP_PITCH = 10.0f;
 
+// --- Gull model ---
+static GullFlock* gullFlock = NULL;
+
+static int showBirds = 1;
+
 // --- Function declarations ---
 void reshape(int width, int height);
 void display();
@@ -388,7 +393,7 @@ void display() {
         glEnable(GL_LIGHTING);
         glEnable(GL_COLOR_MATERIAL);
         glShadeModel(GL_SMOOTH);
-        forestSystemRender(forest, dayTime);
+        forestSystemRender(forest, dayTime, weatherType == 1);
         glPopMatrix();
     }
     if (rocks && rocks->instanceCount > 0) {
@@ -396,7 +401,7 @@ void display() {
         glEnable(GL_LIGHTING);
         glEnable(GL_COLOR_MATERIAL);
         glShadeModel(GL_SMOOTH);
-        rockFieldRender(rocks);
+        rockFieldRender(rocks, weatherType == 1);
         glPopMatrix();
     }
     if (shrubs && shrubs->instanceCount > 0) {
@@ -404,7 +409,7 @@ void display() {
         glEnable(GL_LIGHTING);
         glEnable(GL_COLOR_MATERIAL);
         glShadeModel(GL_SMOOTH);
-        shrubFieldRender(shrubs);
+        shrubFieldRender(shrubs, weatherType == 1);
         glPopMatrix();
     }
     if (logs && logs->instanceCount > 0) {
@@ -412,8 +417,12 @@ void display() {
         glEnable(GL_LIGHTING);
         glEnable(GL_COLOR_MATERIAL);
         glShadeModel(GL_SMOOTH);
-        logFieldRender(logs);
+        logFieldRender(logs, weatherType == 1);
         glPopMatrix();
+    }
+    // --- Render animated gull flock only ---
+    if (showBirds && gullFlock) {
+        gullFlockRender(gullFlock, 0);
     }
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -421,7 +430,6 @@ void display() {
     glDepthMask(GL_FALSE);
     landscapeRenderWater(waterLevel, landscape, dayTime);
     glDepthMask(GL_TRUE);
-    glDisable(GL_BLEND);
     if (snowEnabled && snowSystem) {
         glDisable(GL_FOG);
         weatherParticleSystemRender(snowSystem);
@@ -452,16 +460,17 @@ void display() {
     glWindowPos2i(5, glutGet(GLUT_WINDOW_HEIGHT) - 20);
     Print("Time: %02d:%02d  Weather: %s", 
           (int)dayTime, (int)((dayTime-(int)dayTime)*60), 
-          weatherType ? "Snow" : "Clear");
+          weatherType ? "Winter" : "Fall");
     int y = 5;
     glWindowPos2i(5, y);
-    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s   |   Snow: %s   |   Rain: %s",
+    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s   |   Birds: %s   |   Snow: %s   |   Rain: %s",
         th, ph, dim, camera->mode == CAMERA_MODE_FREE_ORBIT ? "Free Orbit" : "First Person",
         waterLevel,
         wireframe,
         showAxes,
         animateTime ? "On" : "Off", timeSpeed,
         fogEnabled ? "On" : "Off",
+        showBirds ? "On" : "Off",
         snowEnabled ? "On" : "Off",
         rainEnabled ? "On" : "Off");
     glEnable(GL_DEPTH_TEST);
@@ -716,6 +725,9 @@ void keyboard(unsigned char key, int x, int y) {
                 Project(fov?55:0, asp, dim);
             }
             break;
+        case 'v':
+            showBirds = !showBirds;
+            break;
     }
     glutPostRedisplay();
 }
@@ -739,6 +751,9 @@ void idle() {
         weatherParticleSystemUpdate(rainSystem, landscape, deltaTime, weatherIntensity, lastTime);
     }
     updateTreeAnimation();
+    if (gullFlock) {
+        gullFlockUpdate(gullFlock, landscape, deltaTime);
+    }
     if (animateWater) {
         waterTime += deltaTime;
     }
@@ -870,12 +885,15 @@ int main(int argc, char* argv[]) {
     lastTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     
     // Initialize decorative scene elements
-    rocks = rockFieldCreate(120);
+    rocks = rockFieldCreate(100);
     rockFieldGenerate(rocks, landscape);
-    shrubs = shrubFieldCreate(100);
+    shrubs = shrubFieldCreate(80);
     shrubFieldGenerate(shrubs, landscape);
-    logs = logFieldCreate(100);
+    logs = logFieldCreate(60);
     logFieldGenerate(logs, landscape);
+    
+    // Load gull OBJ model
+    gullFlock = gullFlockCreate(8, 4, LANDSCAPE_SCALE);
     
     // Set up GLUT callbacks
     glutDisplayFunc(display);
@@ -903,6 +921,7 @@ int main(int argc, char* argv[]) {
     shrubFieldDestroy(shrubs);
     logFieldDestroy(logs);
     skySystemDestroy(&skySystemInstance);
+    gullFlockDestroy(gullFlock);
     
     return 0;
 }

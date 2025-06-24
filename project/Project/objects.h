@@ -31,7 +31,7 @@ extern int treeShader;
 typedef enum {
     FOREST_TREE_PINE,            // Layered
     FOREST_TREE_FIR,             // Slender
-    FOREST_TREE_BIRCH,           // Round foliage
+    FOREST_TREE_MAPLE,           // Elongated, orange foliage
 } ForestTreeType;
 
 #define NUM_FOREST_TREE_TYPES 3
@@ -65,7 +65,7 @@ void forestSystemGenerateRound(ForestSystem* forest, int* currentVertex, int* cu
 void forestSystemGenerateBushy(ForestSystem* forest, int* currentVertex, int* currentIndex);
 void forestSystemGenerateTrunk(ForestSystem* forest, int type, int* currentVertex, int* currentIndex);
 void forestSystemGenerate(ForestSystem* forest, Landscape* landscape);
-void forestSystemRender(ForestSystem* forest, float dayTime);
+void forestSystemRender(ForestSystem* forest, float dayTime, int snowActive);
 void forestSystemDestroy(ForestSystem* forest);
 int forestPlacementValid(float x, float z, ForestTree* existing, int count, float minDist);
 void forestSystemInitResources(void);
@@ -100,7 +100,7 @@ typedef struct {
 /* Rock API */
 RockField* rockFieldCreate(int maxRocks);
 void rockFieldGenerate(RockField* field, Landscape* landscape);
-void rockFieldRender(RockField* field);
+void rockFieldRender(RockField* field, int snowActive);
 void rockFieldDestroy(RockField* field);
 
 // --- Shrub system ---
@@ -114,6 +114,7 @@ typedef struct {
     float subRadii[MAX_BUSH_SUBSPHERES];      // Sub-sizes
     float subColors[MAX_BUSH_SUBSPHERES][3];  // Sub-colors
     int subCount;                // Active subs
+    float mossCoverage;          // 0-1, how much moss/lichen
 } ShrubObject;
 
 /* Shrub field */
@@ -126,7 +127,7 @@ typedef struct {
 /* Shrub API */
 ShrubField* shrubFieldCreate(int maxBushes);
 void shrubFieldGenerate(ShrubField* field, Landscape* landscape);
-void shrubFieldRender(ShrubField* field);
+void shrubFieldRender(ShrubField* field, int snowActive);
 void shrubFieldDestroy(ShrubField* field);
 
 // --- Log system ---
@@ -137,7 +138,15 @@ typedef struct {
     float radius;                // Radius
     float rotation;              // Y-rotation
     float tilt;                  // Z-tilt
-    float color[3];              // RGB color
+    float color[3];              // RGB color (bark)
+    float endColor[3];           // End cap color
+    float bend;                  // Curvature amount (radians)
+    int barkPattern;             // Bark texture/pattern index
+    int numKnots;                // Number of knots/branch nubs
+    float knotPos[4][2];         // Up to 4 knots: (along, around)
+    float knotSize[4];           // Knot radii
+    float mossCoverage;          // 0-1, how much moss
+    float age;                   // 0-1, for color/decay
 } LogObject;
 
 /* Log field */
@@ -150,7 +159,31 @@ typedef struct {
 /* Log API */
 LogField* logFieldCreate(int maxLogs);
 void logFieldGenerate(LogField* field, Landscape* landscape);
-void logFieldRender(LogField* field);
+void logFieldRender(LogField* field, int snowActive);
 void logFieldDestroy(LogField* field);
+
+// --- Animated Gull Flock System ---
+typedef struct {
+    float x, y, z;         // Position
+    float angle;           // Direction of flight (radians)
+    float wingPhase;       // For flapping animation
+    float speed;           // Flight speed
+    float radius;          // Radius of circular path
+    float centerX, centerY, centerZ; // Center of circular path
+    float heightOffset;    // For vertical undulation
+    float dirX, dirY, dirZ; // Direction vector (unit)
+    int colorPattern;      // For color variety
+    float undulationPhase; // For per-bird vertical offset
+} Gull;
+
+typedef struct {
+    Gull* gulls;
+    int count;
+} GullFlock;
+
+GullFlock* gullFlockCreate(int numFlocks, int gullsPerFlock, float landscapeScale);
+void gullFlockUpdate(GullFlock* flock, Landscape* landscape, float deltaTime);
+void gullFlockRender(const GullFlock* flock, int gullDisplayList);
+void gullFlockDestroy(GullFlock* flock);
 
 #endif
