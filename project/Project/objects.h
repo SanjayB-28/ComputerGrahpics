@@ -29,9 +29,9 @@ extern int treeShader;
 // --- Forest system ---
 /* Tree types */
 typedef enum {
-    FOREST_TREE_PINE,            // Layered
-    FOREST_TREE_FIR,             // Slender
-    FOREST_TREE_MAPLE,           // Elongated, orange foliage
+    FOREST_TREE_PINE,
+    FOREST_TREE_FIR,
+    FOREST_TREE_MAPLE,
 } ForestTreeType;
 
 #define NUM_FOREST_TREE_TYPES 3
