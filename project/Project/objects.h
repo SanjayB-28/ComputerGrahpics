@@ -29,9 +29,9 @@ extern int treeShader;
 // --- Forest system ---
 /* Tree types */
 typedef enum {
-    FOREST_TREE_PINE,
-    FOREST_TREE_FIR,
-    FOREST_TREE_MAPLE,
+    FOREST_TREE_PINE,            // Layered
+    FOREST_TREE_FIR,             // Slender
+    FOREST_TREE_MAPLE,           // Elongated, orange foliage
 } ForestTreeType;
 
 #define NUM_FOREST_TREE_TYPES 3
@@ -161,29 +161,5 @@ LogField* logFieldCreate(int maxLogs);
 void logFieldGenerate(LogField* field, Landscape* landscape);
 void logFieldRender(LogField* field, int snowActive);
 void logFieldDestroy(LogField* field);
-
-// --- Animated Gull Flock System ---
-typedef struct {
-    float x, y, z;         // Position
-    float angle;           // Direction of flight (radians)
-    float wingPhase;       // For flapping animation
-    float speed;           // Flight speed
-    float radius;          // Radius of circular path
-    float centerX, centerY, centerZ; // Center of circular path
-    float heightOffset;    // For vertical undulation
-    float dirX, dirY, dirZ; // Direction vector (unit)
-    int colorPattern;      // For color variety
-    float undulationPhase; // For per-bird vertical offset
-} Gull;
-
-typedef struct {
-    Gull* gulls;
-    int count;
-} GullFlock;
-
-GullFlock* gullFlockCreate(int numFlocks, int gullsPerFlock, float landscapeScale);
-void gullFlockUpdate(GullFlock* flock, Landscape* landscape, float deltaTime);
-void gullFlockRender(const GullFlock* flock, int gullDisplayList);
-void gullFlockDestroy(GullFlock* flock);
 
 #endif

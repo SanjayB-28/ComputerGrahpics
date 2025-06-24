@@ -47,12 +47,9 @@ static int fov = 1;
       
 static float lightHeight = 250.0f;
 static float dayTime = 0.0f;
-static float windStrength = 0.0f;
 
 float waterLevel = -4.0f;
 static float waterSpeed = 1.0f;
-static float waterTime = 0.0f;
-static int animateWater = 1;
 
 static int wireframe = 0;
 static int showAxes = 0;
@@ -78,8 +75,6 @@ static float lastTime = 0;
 static float deltaTime = 0;
 
 /* Atmospheric effects */
-float fogDensity = 0.005f;
-int fogEnabled = 0;
 
 static int animateTime = 1;
 static float timeSpeed = 1.0f;
@@ -107,11 +102,6 @@ static const int INIT_ORBIT_TH = 45, INIT_ORBIT_PH = 10;
 static const float INIT_ORBIT_DIM = 70.0f;
 static const float INIT_FP_POS[3] = {0.0f, 2.0f, 0.0f};
 static const float INIT_FP_YAW = 45.0f, INIT_FP_PITCH = 10.0f;
-
-// --- Gull model ---
-static GullFlock* gullFlock = NULL;
-
-static int showBirds = 1;
 
 // --- Function declarations ---
 void reshape(int width, int height);
@@ -294,19 +284,6 @@ void updateDynamicLighting(float dayTime) {
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matShininess);
 }
 
-// --- Animate tree swaying for wind effect ---
-/* Updates tree tilt angles based on wind strength and time */
-void updateTreeAnimation() {
-    static float windTime = 0.0f;
-    windTime += deltaTime;
-    windStrength = sin(windTime * 0.5f) * 0.5f + 0.5f;
-    for (int i = 0; i < forest->instanceCount; i++) {
-        float windEffect = windStrength * (1.0f + sin(forest->instances[i].x * 0.1f + windTime));
-        forest->instances[i].tiltX = sin(windTime + forest->instances[i].x) * windEffect * 5.0f;
-        forest->instances[i].tiltZ = cos(windTime * 0.7f + forest->instances[i].z) * windEffect * 5.0f;
-    }
-}
-
 // --- Lighting/material setup ---
 /* Configures OpenGL lighting state for the scene */
 void setupLighting() {
@@ -320,39 +297,6 @@ void setupLighting() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mSpecular);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 30.0f);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-}
-
-// --- Fog effect for atmosphere ---
-/* Configures fog parameters based on time of day */
-void updateFog(float dayTime) {
-    float timeNormalized = dayTime / 24.0f;
-    float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
-    float sunHeight = sin(sunAngle);
-    float baseDensity;
-    float fogColor[4];
-    if (sunHeight > 0) {
-        baseDensity = 0.003f;
-        fogColor[0] = 0.95f;
-        fogColor[1] = 0.95f;
-        fogColor[2] = 0.95f;
-    } else {
-        baseDensity = 0.008f;
-        fogColor[0] = 0.7f;
-        fogColor[1] = 0.7f;
-        fogColor[2] = 0.7f;
-    }
-    fogColor[3] = 1.0f;
-    if (fogEnabled) {
-        glEnable(GL_FOG);
-        glFogi(GL_FOG_MODE, GL_EXP2);
-        glFogf(GL_FOG_DENSITY, baseDensity);
-        glFogfv(GL_FOG_COLOR, fogColor);
-        float fogStart = sunHeight > 0 ? dim * 0.1f : dim * 0.05f;
-        float fogEnd = sunHeight > 0 ? dim * 0.8f : dim * 0.4f;
-        glFogf(GL_FOG_START, fogStart);
-        glFogf(GL_FOG_END, fogEnd);
-        glHint(GL_FOG_HINT, GL_NICEST);
-    }
 }
 
 // --- OpenGL state initialization ---
@@ -380,8 +324,6 @@ void display() {
               camera->lookAt[0], camera->lookAt[1], camera->lookAt[2],
               camera->upVec[0], camera->upVec[1], camera->upVec[2]);
     skySystemRenderSunAndMoon(&skySystemInstance, dayTime);
-    updateFog(dayTime);
-    updateDynamicLighting(dayTime);
     landscapeRender(landscape, weatherType);
     useShader(0);
     if (cloudSystem) {
@@ -420,10 +362,6 @@ void display() {
         logFieldRender(logs, weatherType == 1);
         glPopMatrix();
     }
-    // --- Render animated gull flock only ---
-    if (showBirds && gullFlock) {
-        gullFlockRender(gullFlock, 0);
-    }
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -431,16 +369,11 @@ void display() {
     landscapeRenderWater(waterLevel, landscape, dayTime);
     glDepthMask(GL_TRUE);
     if (snowEnabled && snowSystem) {
-        glDisable(GL_FOG);
         weatherParticleSystemRender(snowSystem);
-        glEnable(GL_FOG);
     }
     if (rainEnabled && rainSystem) {
-        glDisable(GL_FOG);
         weatherParticleSystemRender(rainSystem);
-        glEnable(GL_FOG);
     }
-    glDisable(GL_FOG);
     if (showAxes) {
         glDisable(GL_DEPTH_TEST);
         glColor3f(1,1,1);
@@ -463,16 +396,13 @@ void display() {
           weatherType ? "Winter" : "Fall");
     int y = 5;
     glWindowPos2i(5, y);
-    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s   |   Birds: %s   |   Snow: %s   |   Rain: %s",
+    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Snow: %s   |   Rain: %s",
         th, ph, dim, camera->mode == CAMERA_MODE_FREE_ORBIT ? "Free Orbit" : "First Person",
         waterLevel,
         wireframe,
         showAxes,
         animateTime ? "On" : "Off", timeSpeed,
-        fogEnabled ? "On" : "Off",
-        showBirds ? "On" : "Off",
-        snowEnabled ? "On" : "Off",
-        rainEnabled ? "On" : "Off");
+        snowEnabled ? "On" : "Off", rainEnabled ? "On" : "Off");
     glEnable(GL_DEPTH_TEST);
     glutSwapBuffers();
 }
@@ -698,15 +628,6 @@ void keyboard(unsigned char key, int x, int y) {
         case 'q':
             weatherType = (weatherType + 1) % 2;
             break;
-        case 'b':
-            fogEnabled = !fogEnabled;
-            break;
-        case 'n':
-            snowEnabled = !snowEnabled;
-            break;
-        case 'm':
-            rainEnabled = !rainEnabled;
-            break;
         case 'z':
             if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
                 dim -= 5.0f;
@@ -725,8 +646,11 @@ void keyboard(unsigned char key, int x, int y) {
                 Project(fov?55:0, asp, dim);
             }
             break;
-        case 'v':
-            showBirds = !showBirds;
+        case 'n':
+            snowEnabled = !snowEnabled;
+            break;
+        case 'm':
+            rainEnabled = !rainEnabled;
             break;
     }
     glutPostRedisplay();
@@ -749,13 +673,6 @@ void idle() {
     }
     if (rainEnabled && rainSystem) {
         weatherParticleSystemUpdate(rainSystem, landscape, deltaTime, weatherIntensity, lastTime);
-    }
-    updateTreeAnimation();
-    if (gullFlock) {
-        gullFlockUpdate(gullFlock, landscape, deltaTime);
-    }
-    if (animateWater) {
-        waterTime += deltaTime;
     }
     glutPostRedisplay();
 }
@@ -892,9 +809,6 @@ int main(int argc, char* argv[]) {
     logs = logFieldCreate(60);
     logFieldGenerate(logs, landscape);
     
-    // Load gull OBJ model
-    gullFlock = gullFlockCreate(8, 4, LANDSCAPE_SCALE);
-    
     // Set up GLUT callbacks
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
@@ -921,7 +835,6 @@ int main(int argc, char* argv[]) {
     shrubFieldDestroy(shrubs);
     logFieldDestroy(logs);
     skySystemDestroy(&skySystemInstance);
-    gullFlockDestroy(gullFlock);
     
     return 0;
 }
