@@ -2,7 +2,7 @@
 
 **Student:** Sanjay Baskaran  
 **Assignment:** Textured & Lit 3-D Scene — "A Tiny Village"  
-**Time to Complete:** ≈ 25 hours
+**Time to Complete:** ≈ 25 + 1.5(resubmission) hours
 
 ---
 

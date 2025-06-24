@@ -73,6 +73,7 @@ Sun(Position[0], Position[1], Position[2], 0.5);
 
 glEnable(GL_NORMALIZE);
 glEnable(GL_LIGHTING);
+glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
 glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 glEnable(GL_COLOR_MATERIAL);
 glEnable(GL_LIGHT0);
@@ -152,7 +153,7 @@ glLightfv(GL_LIGHT0, GL_POSITION, Position);
 
 void idle () {
   double t = glutGet(GLUT_ELAPSED_TIME)/1000.0;
-  light_angle = fmod(90*t,360);
+  light_angle = fmod(60*t,360);
   glutPostRedisplay();
 }
 

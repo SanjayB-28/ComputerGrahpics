@@ -1,4 +1,17 @@
 #include "objects.h"
+#include <math.h>
+
+static void normal(float* a, float* b, float* c) {
+    float u[3] = {b[0]-a[0], b[1]-a[1], b[2]-a[2]};
+    float v[3] = {c[0]-a[0], c[1]-a[1], c[2]-a[2]};
+    float n[3] = {
+        u[1]*v[2] - u[2]*v[1],
+        u[2]*v[0] - u[0]*v[2],
+        u[0]*v[1] - u[1]*v[0]
+    };
+    float len = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
+    glNormal3f(n[0]/len, n[1]/len, n[2]/len);
+}
 
 void Sun (double x, double y, double z, double radius) {
   const int d=5;
@@ -71,15 +84,19 @@ void Cylinder (double x, double y, double z, double radius, double height) {
     float tc = th/(float) 360;
     float tcd = (th+d)/(float) 360;
 
+    glNormal3d(-Sin(th), 0, -Cos(th));
     glTexCoord2f(tc, 0);
     glVertex3f(Sin(th), 0, Cos(th));
 
+    glNormal3d(-Sin(th), 0, -Cos(th));
     glTexCoord2f(tc, 1);
     glVertex3f(Sin(th), 1, Cos(th));
 
+    glNormal3d(-Sin(th+d), 0, -Cos(th+d));
     glTexCoord2f(tcd, 1);
     glVertex3f(Sin(th+d), 1, Cos(th+d));
 
+    glNormal3d(-Sin(th+d), 0, -Cos(th+d));
     glTexCoord2f(tcd, 0);
     glVertex3f(Sin(th+d), 0, Cos(th+d));
     glEnd();
@@ -108,13 +125,13 @@ void Cone (double x, double y, double z, double radius, double height) {
   glVertex3f(0, 0, 0);
   for (int th=0; th<=360; th+=d) {
     glColor3f(1, 1, 1);
-    float shininess[] = {32};
+    float shininess[] = {0};
     float color[] = {1, 1, 1, 1.0};
     float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
     glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT,GL_SPECULAR, color);
     glMaterialfv(GL_FRONT,GL_EMISSION, emit);
-    glNormal3d(0, -1, 0); // base normal
+    glNormal3d(0, -1, 0);
     glTexCoord2f(Sin(th)+0.5, Cos(th)+0.5);
     glVertex3f(Sin(th), 0, Cos(th));
   }
@@ -126,13 +143,12 @@ void Cone (double x, double y, double z, double radius, double height) {
   glVertex3f(0, 1, 0);
   for (int th=0; th<=360; th+=d) {
     glColor3f(1, 1, 1);
-    float shininess[] = {32};
+    float shininess[] = {0};
     float color[] = {1, 1, 1, 1.0};
     float emit[]  = {0.0, 0.0, 0.01*emission, 1.0};
     glMaterialfv(GL_FRONT,GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT,GL_SPECULAR, color);
     glMaterialfv(GL_FRONT,GL_EMISSION, emit);
-    // Correct normal for cone side
     double nx = Sin(th);
     double ny = radius / height;
     double nz = Cos(th);
@@ -202,20 +218,6 @@ void Roof(double x, double y, double z, double width, double height, double dept
   glScalef(width, height, depth);
   glColor3f(1, 1, 1);
 
-  // Helper for normal calculation
-  #define V3(x,y,z) (float[3]){x,y,z}
-  void normal(float* a, float* b, float* c) {
-    float u[3] = {b[0]-a[0], b[1]-a[1], b[2]-a[2]};
-    float v[3] = {c[0]-a[0], c[1]-a[1], c[2]-a[2]};
-    float n[3] = {
-      u[1]*v[2] - u[2]*v[1],
-      u[2]*v[0] - u[0]*v[2],
-      u[0]*v[1] - u[1]*v[0]
-    };
-    float len = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
-    glNormal3f(n[0]/len, n[1]/len, n[2]/len);
-  }
-
   // Front triangle
   float v0[3] = {-1, 0, +1};
   float v1[3] = {+1, 0, +1};
@@ -266,7 +268,11 @@ void Roof(double x, double y, double z, double width, double height, double dept
 }
 
 void Vertex(double th, double ph) {
-    glVertex3d(Sin(th) * Cos(ph), Sin(ph), Cos(th) * Cos(ph));
+    double x = Sin(th) * Cos(ph);
+    double y = Sin(ph);
+    double z = Cos(th) * Cos(ph);
+    glNormal3d(-x, -y, -z);
+    glVertex3d(x, y, z);
 }
 
 void Sphere(double x, double y, double z, double radius, unsigned int textureID) {
