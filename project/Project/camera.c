@@ -1,7 +1,3 @@
-// ---------------------------------------------
-// camera.c - Camera system for orbit and first-person views
-// ---------------------------------------------
-
 #include "camera.h"
 #include "landscape.h"
 #include <math.h>
@@ -20,7 +16,6 @@
 
 extern Landscape* landscape;
 
-/* Camera system constants */
 #define PI 3.14159265359f
 #define DEG2RAD (PI/180.0f)
 #define MIN_DISTANCE 1.0f
@@ -33,10 +28,8 @@ extern Landscape* landscape;
 
 static void constrainToTerrain(ViewCamera* cam);
 
-// --- Camera creation and initialization ---
 ViewCamera* viewCameraCreate(void) {
-    /* Allocate and initialize a new camera with default values
-       Initial mode is orbit view looking at the center of the landscape */
+
     ViewCamera* cam = (ViewCamera*)malloc(sizeof(ViewCamera));
     if (!cam) return NULL;
     cam->mode = CAMERA_MODE_FREE_ORBIT;
@@ -58,15 +51,11 @@ ViewCamera* viewCameraCreate(void) {
     return cam;
 }
 
-// --- Update camera vectors based on mode and angles ---
 void viewCameraUpdateVectors(ViewCamera* cam) {
     float yawRad = cam->horizontalAngle * DEG2RAD;
     float pitchRad = cam->verticalAngle * DEG2RAD;
     switch(cam->mode) {
         case CAMERA_MODE_FIRST_PERSON: {
-            /* First person: Camera stays at position, look direction changes
-               with rotation angles. Front vector calculation determines where
-               the camera is looking based on yaw and pitch. */
             float frontX = -sin(yawRad) * cos(pitchRad);
             float frontY = sin(pitchRad);
             float frontZ = -cos(yawRad) * cos(pitchRad);
@@ -79,9 +68,6 @@ void viewCameraUpdateVectors(ViewCamera* cam) {
             break;
         }
         case CAMERA_MODE_FREE_ORBIT: {
-            /* Orbit mode: Camera moves around a fixed point (origin)
-               Position is calculated using spherical coordinates based on
-               orbit distance and rotation angles */
             cam->position[0] = -2 * cam->orbitDistance * sin(yawRad) * cos(pitchRad);
             cam->position[1] = 2 * cam->orbitDistance * sin(pitchRad);
             cam->position[2] = 2 * cam->orbitDistance * cos(yawRad) * cos(pitchRad);
@@ -101,7 +87,6 @@ void viewCameraMove(ViewCamera* cam, int direction, float deltaTime) {
     float speed = CAMERA_SPEED * deltaTime;
     float yawRad = cam->horizontalAngle * DEG2RAD;
     
-    /* Calculate forward and right vectors for movement direction */
     float forward[3] = {
         -sin(yawRad),
         0.0f,
@@ -136,7 +121,6 @@ void viewCameraMove(ViewCamera* cam, int direction, float deltaTime) {
     
     float halfScale = LANDSCAPE_SCALE * 0.5f;
     if (cam->mode == CAMERA_MODE_FIRST_PERSON) {
-        /* First person: Move camera along terrain, maintaining eye height */
         float newX = cam->position[0] + moveX;
         float newZ = cam->position[2] + moveZ;
         if (newX >= -halfScale && newX <= halfScale && 
@@ -147,7 +131,6 @@ void viewCameraMove(ViewCamera* cam, int direction, float deltaTime) {
             cam->position[1] = groundHeight + EYE_HEIGHT;
         }
     } else if (cam->mode == CAMERA_MODE_FREE_ORBIT) {
-        /* Orbit mode: Movement changes orbit distance or horizontal angle */
         switch(direction) {
             case CAMERA_MOVE_FORWARD:
                 cam->orbitDistance = fmax(10.0f, cam->orbitDistance - speed * 10);
@@ -168,17 +151,13 @@ void viewCameraMove(ViewCamera* cam, int direction, float deltaTime) {
 
 void viewCameraRotate(ViewCamera* cam, float deltaX, float deltaY) {
     if (!cam) return;
-    /* Adjust camera orientation based on mouse movement
-       Different sensitivity based on camera mode */
     float sensitivity = (cam->mode == CAMERA_MODE_FREE_ORBIT) ? 0.4f : 0.2f;
     cam->horizontalAngle += deltaX * sensitivity;
     cam->verticalAngle += deltaY * sensitivity;
     
-    /* Constrain vertical angle to prevent camera flipping */
     if (cam->verticalAngle > 89.0f) cam->verticalAngle = 89.0f;
     if (cam->verticalAngle < -89.0f) cam->verticalAngle = -89.0f;
     
-    /* Normalize horizontal angle to 0-360 range */
     if (cam->horizontalAngle >= 360.0f) cam->horizontalAngle -= 360.0f;
     if (cam->horizontalAngle < 0.0f) cam->horizontalAngle += 360.0f;
     
@@ -186,7 +165,6 @@ void viewCameraRotate(ViewCamera* cam, float deltaX, float deltaY) {
 }
 
 void viewCameraZoom(ViewCamera* cam, float factor) {
-    /* Zoom by adjusting orbit distance - only applies to orbit mode */
     if (!cam || cam->mode != CAMERA_MODE_FREE_ORBIT) return;
     float zoomAmount = (factor - 1.0f) * cam->orbitDistance * ZOOM_SPEED;
     cam->orbitDistance += zoomAmount;
@@ -203,7 +181,6 @@ void viewCameraSetMode(ViewCamera* cam, CameraMode newMode) {
 }
 
 void viewCameraUpdate(ViewCamera* cam, float deltaTime) {
-    /* Update camera position based on current mode and terrain */
     if (!cam) return;
     float groundHeight = landscapeGetHeight(landscape, cam->position[0], cam->position[2]);
     switch(cam->mode) {
@@ -217,7 +194,6 @@ void viewCameraUpdate(ViewCamera* cam, float deltaTime) {
 }
 
 static void constrainToTerrain(ViewCamera* cam) {
-    /* Keep camera within the landscape boundaries */
     float halfScale = LANDSCAPE_SCALE * 0.5f;
     if (cam->mode != CAMERA_MODE_FREE_ORBIT) {
         cam->position[0] = fmax(-halfScale, fmin(halfScale, cam->position[0]));
@@ -226,7 +202,6 @@ static void constrainToTerrain(ViewCamera* cam) {
 }
 
 void viewCameraReset(ViewCamera* cam) {
-    /* Reset camera to default viewing position and orbit mode */
     if (!cam) return;
     cam->horizontalAngle = -60.0f;
     cam->verticalAngle = 30.0f;
@@ -239,8 +214,6 @@ void viewCameraDestroy(ViewCamera* cam) {
 }
 
 void viewCameraSetProjection(ViewCamera* cam, float fov, float aspect, float nearPlane, float farPlane) {
-    /* Set up projection matrix based on camera mode
-       First person uses closer near plane for better precision */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     if (cam->mode == CAMERA_MODE_FIRST_PERSON) {

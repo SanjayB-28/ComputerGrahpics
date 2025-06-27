@@ -1,7 +1,3 @@
-// ---------------------------------------------
-// CSCIx229.h - Utility functions and OpenGL setup
-// ---------------------------------------------
-
 #ifndef CSCIx229
 #define CSCIx229
 
@@ -11,7 +7,6 @@
 #include <string.h>
 #include <math.h>
 
-// --- OpenGL and platform setup ---
 #ifdef USEGLEW
 #include <GL/glew.h>
 #endif
@@ -38,20 +33,17 @@
 #include <GL/gl.h>
 #endif
 
-// --- Display scaling ---
 #ifndef RES
 #define RES 1
 #endif
 
-// --- Math helpers ---
-#define Cos(th) cos(3.14159265/180*(th)) // Cosine in degrees
-#define Sin(th) sin(3.14159265/180*(th)) // Sine in degrees
+#define Cos(th) cos(3.14159265/180*(th))
+#define Sin(th) sin(3.14159265/180*(th))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// --- Utility API ---
 #ifdef __GNUC__
 void Print(const char* format , ...) __attribute__ ((format(printf,1,2)));
 void Fatal(const char* format , ...) __attribute__ ((format(printf,1,2))) __attribute__ ((noreturn));

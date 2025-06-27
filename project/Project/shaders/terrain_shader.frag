@@ -24,5 +24,5 @@ void main()
       color = vec3(0.76,0.7,0.5);  // Sand
 
    // Output color with lighting
-   gl_FragColor = vec4(intensity * color, 1.0);
+   gl_FragColor = vec4(min(intensity, 0.7) * color, 1.0);
 }

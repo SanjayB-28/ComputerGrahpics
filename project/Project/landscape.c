@@ -1,7 +1,3 @@
-// ---------------------------------------------
-// landscape.c - Terrain generation and rendering
-// ---------------------------------------------
-
 #include "landscape.h"
 #include "CSCIx229.h"
 #include <stdio.h>
@@ -19,12 +15,9 @@
 
 #include "shaders.h"
 
-/* Random offsets to create variation in the procedural terrain */
 #define NOISE_OFFSET_X 37.0f
 #define NOISE_OFFSET_Z 91.0f
 
-// --- Landscape creation and mesh setup ---
-/* Creates the terrain data structure and initializes the mesh geometry */
 Landscape* landscapeCreate() {
     Landscape* landscape = (Landscape*)malloc(sizeof(Landscape));
     if (!landscape) return NULL;
@@ -71,15 +64,12 @@ Landscape* landscapeCreate() {
     return landscape;
 }
 
-// --- Noise and heightmap utilities ---
-/* Basic noise function that generates pseudo-random values from integer coordinates */
 float noise2D(int x, int y) {
     int n = x + y * 57;
     n = (n << 13) ^ n;
     return (1.0f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f);
 }
 
-/* Smoothed noise that averages neighboring noise values for more natural results */
 float smoothNoise2D(float x, float y) {
     float corners = (noise2D(x-1, y-1) + noise2D(x+1, y-1) + noise2D(x-1, y+1) + noise2D(x+1, y+1)) / 16.0f;
     float sides = (noise2D(x-1, y) + noise2D(x+1, y) + noise2D(x, y-1) + noise2D(x, y+1)) / 8.0f;
@@ -87,14 +77,12 @@ float smoothNoise2D(float x, float y) {
     return corners + sides + center;
 }
 
-/* Cosine interpolation for smoother transitions between noise values */
 float interpolate(float a, float b, float x) {
     float ft = x * 3.1415927f;
     float f = (1.0f - cosf(ft)) * 0.5f;
     return a*(1.0f-f) + b*f;
 }
 
-/* Combines smoothing and interpolation for high-quality noise values */
 float interpolatedNoise2D(float x, float y) {
     int intX = (int)x;
     float fracX = x - intX;
@@ -117,8 +105,6 @@ float min_f(float a, float b) {
     return a < b ? a : b;
 }
 
-// --- Heightmap generation ---
-/* Creates a procedural terrain using multiple octaves of noise (Perlin-like approach) */
 void landscapeGenerateHeightMap(Landscape* landscape) {
     float persistence = 0.5f;
     int octaves = 5;
@@ -156,8 +142,6 @@ void landscapeGenerateHeightMap(Landscape* landscape) {
     }
 }
 
-// --- Normal calculation for lighting ---
-/* Computes surface normals for each vertex by averaging face normals */
 void landscapeCalculateNormals(Landscape* landscape) {
     memset(landscape->normals, 0, landscape->vertexCount * 3 * sizeof(float));
 
@@ -206,7 +190,6 @@ void landscapeCalculateNormals(Landscape* landscape) {
     }
 }
 
-// --- Memory cleanup ---
 void landscapeDestroy(Landscape* landscape) {
     if (landscape) {
         if (landscape->elevationData) free(landscape->elevationData);
@@ -218,12 +201,10 @@ void landscapeDestroy(Landscape* landscape) {
     }
 }
 
-// --- Utility math ---
 float landscapeMix(float a, float b, float t) {
     return a * (1.0f - t) + b * t;
 }
 
-/* Determines snow coverage based on elevation and slope */
 float landscapeGetSnowBlend(float height, float slope) {
     float snowStartHeight = 12.0f;
     float snowEndHeight = 25.0f;
@@ -240,18 +221,18 @@ float landscapeGetSnowBlend(float height, float slope) {
     return heightFactor * slopeFactor;
 }
 
-// --- Main terrain rendering ---
-/* Renders the terrain with materials based on height, slope and weather */
 void landscapeRender(Landscape* landscape, int weatherType) {
     if (!landscape) return;
-    
+    float noSpecular[] = {0.0f, 0.0f, 0.0f, 1.0f};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, noSpecular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 1.0f);
     glBegin(GL_TRIANGLES);
     for(int i = 0; i < landscape->indexCount; i++) {
         int index = landscape->indices[i];
         float height = landscape->vertices[index * 3 + 1];
         float normal_y = landscape->normals[index * 3 + 1];
         
-        float grassColor[] = {0.2f, 0.5f, 0.2f};
+        float grassColor[] = {0.13f, 0.45f, 0.13f};
         float lightRock[] = {0.5f, 0.48f, 0.42f};
         float darkRock[] = {0.25f, 0.23f, 0.21f};
         float sandColor[] = {0.72f, 0.68f, 0.48f};
@@ -302,14 +283,12 @@ void landscapeRender(Landscape* landscape, int weatherType) {
     glEnd();
 }
 
-/* Smooth transition function for natural blending */
 float landscapeSmoothStep(float edge0, float edge1, float x) {
     float t = (x - edge0) / (edge1 - edge0);
     t = t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
     return t * t * (3.0f - 2.0f * t);
 }
 
-/* Renders animated water surface with time-of-day dependent coloring */
 void landscapeRenderWater(float waterLevel, Landscape* landscape, float dayTime) {
     float waterSize = LANDSCAPE_SCALE * 1.0f;
     int segments = 64;
@@ -387,7 +366,6 @@ void landscapeRenderWater(float waterLevel, Landscape* landscape, float dayTime)
     glDisable(GL_BLEND);
 }
 
-/* Get interpolated height at any world space coordinate */
 float landscapeGetHeight(Landscape* landscape, float x, float z) {
     float nx = (x / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
     float nz = (z / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);

@@ -1,12 +1,5 @@
-// ---------------------------------------------
-// errcheck.c - OpenGL error checking utility
-// ---------------------------------------------
-
 #include "CSCIx229.h"
 
-//
-//  Check for OpenGL errors and print to stderr
-//
 void ErrCheck(const char* where)
 {
    int err = glGetError();

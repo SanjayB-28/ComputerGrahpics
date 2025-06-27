@@ -1,42 +1,29 @@
-# ----------
-# makefile
-# ----------
-
-# Output name
 EXE=final
 
-# Main target
 all: final
 
-# --- Platform configs ---
 # Windows
 ifeq "$(OS)" "Windows_NT"
-CFLG=-O3 -Wall -DUSEGLEW         # Windows compile flags
-LIBS=-lfreeglut -lglew32 -lglu32 -lopengl32 -lm  # Windows libraries
-CLEAN=rm -f *.exe *.o *.a        # Windows cleanup
+CFLG=-O3 -Wall -DUSEGLEW         
+LIBS=-lfreeglut -lglew32 -lglu32 -lopengl32 -lm  
+CLEAN=rm -f *.exe *.o *.a        
 else
 # macOS
 ifeq "$(shell uname)" "Darwin"
-RES=$(shell uname -r|sed -E 's/(.).*/\1/'|tr 12 21)  # Retina display scaling
-CFLG=-O3 -Wall -Wno-deprecated-declarations -DRES=$(RES)  # macOS flags
-LIBS=-framework GLUT -framework OpenGL     # macOS frameworks
+RES=$(shell uname -r|sed -E 's/(.).*/\1/'|tr 12 21)  
+CFLG=-O3 -Wall -Wno-deprecated-declarations -DGL_SILENCE_DEPRECATION -DRES=$(RES)  
+LIBS=-framework GLUT -framework OpenGL     
 # Linux/Unix
 else
-CFLG=-O3 -Wall                   # Standard flags
-LIBS=-lglut -lGLU -lGL -lm       # Unix libraries
+CFLG=-O3 -Wall                   
+LIBS=-lglut -lGLU -lGL -lm       
 endif
-# Non-Windows cleanup
 CLEAN=rm -f $(EXE) *.o *.a
 endif
 
-# --- Dependencies ---
-# Core components
-main.o: main.c CSCIx229.h landscape.h objects.h weather_particles.h
+main.o: main.c CSCIx229.h landscape.h
 landscape.o: landscape.c landscape.h CSCIx229.h
-objects.o: objects.c objects.h landscape.h CSCIx229.h
-weather_particles.o: weather_particles.c weather_particles.h landscape.h CSCIx229.h
 
-# Utility library
 fatal.o: fatal.c CSCIx229.h
 errcheck.o: errcheck.c CSCIx229.h
 print.o: print.c CSCIx229.h
@@ -44,26 +31,35 @@ loadtexbmp.o: loadtexbmp.c CSCIx229.h
 loadobj.o: loadobj.c CSCIx229.h
 projection.o: projection.c CSCIx229.h
 
-# Additional modules
 shaders.o: shaders.c CSCIx229.h
 sky.o: sky.c sky.h landscape.h
 sky_clouds.o: sky_clouds.c sky_clouds.h
 camera.o: camera.c camera.h
 
-# Create utility library
+fractal_tree.o: fractal_tree.c fractal_tree.h
+	gcc -c $(CFLG) fractal_tree.c
+
+objects_render.o: objects_render.c objects_render.h landscape.h fractal_tree.h
+	gcc -c $(CFLG) objects_render.c
+
+particles.o: particles.c particles.h
+	gcc -c $(CFLG) particles.c
+
 CSCIx229.a: fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o
 	ar -rcs $@ $^
 
-# Compile rules
 .c.o:
 	gcc -c $(CFLG) $<
 .cpp.o:
 	g++ -c $(CFLG) $<
 
-# Link executable
-final: main.o landscape.o objects.o weather_particles.o shaders.o sky.o sky_clouds.o camera.o sky_clouds.o CSCIx229.a
-	gcc $(CFLG) -o $@ $^ $(LIBS)
+OBJS = main.o landscape.o shaders.o sky.o sky_clouds.o camera.o fractal_tree.o objects_render.o particles.o boulder.o grass.o
 
-# Cleanup
+final: $(OBJS) CSCIx229.a
+	$(CC) $(CFLAGS) -o final $(OBJS) CSCIx229.a $(LIBS)
+
+grass.o: grass.c grass.h
+	$(CC) $(CFLAGS) -c grass.c
+
 clean:
 	$(CLEAN)

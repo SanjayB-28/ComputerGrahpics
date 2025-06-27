@@ -1,7 +1,3 @@
-// ---------------------------------------------
-// sky.c - Sun, moon, and sky system
-// ---------------------------------------------
-
 #include "sky.h"
 #include "landscape.h"
 #include <math.h>
@@ -20,8 +16,6 @@
 static SkySystem* globalSky = NULL;
 static GLUquadric* quadric = NULL;
 
-// --- Initialize sky system ---
-/* Sets up celestial objects and rendering resources */
 void skySystemInit(SkySystem* sky) {
     quadric = gluNewQuadric();
     gluQuadricNormals(quadric, GLU_SMOOTH);
@@ -38,8 +32,6 @@ void skySystemInit(SkySystem* sky) {
     globalSky = sky;
 }
 
-// --- Render a sky object ---
-/* Renders sun or moon as an emissive sphere */
 static void renderSkyObject(SkyObject* obj) {
     if (obj->brightness <= 0.0f) return;
     glPushMatrix();
@@ -59,8 +51,6 @@ static void renderSkyObject(SkyObject* obj) {
     glPopMatrix();
 }
 
-// --- Update sky positions ---
-/* Updates sun/moon positions based on time of day */
 void skySystemUpdate(SkySystem* sky, float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float angle = (timeNormalized - 0.25f) * 2 * M_PI;
@@ -77,8 +67,6 @@ void skySystemUpdate(SkySystem* sky, float dayTime) {
     sky->moon.brightness = fmax(0.0f, -sunHeight) * 0.9f;
 }
 
-// --- Update lighting ---
-/* Sets scene lighting based on sun/moon position */
 void skySystemUpdateLighting(SkySystem* sky) {
     float lightPos[4];
     float ambient[4];
@@ -130,8 +118,6 @@ void skySystemUpdateLighting(SkySystem* sky) {
     glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 }
 
-// --- Render celestial objects ---
-/* Renders sun and moon with current lighting */
 void skySystemRenderSunAndMoon(SkySystem* sky, float dayTime) {
     skySystemUpdate(sky, dayTime);
     skySystemUpdateLighting(sky);
@@ -139,8 +125,6 @@ void skySystemRenderSunAndMoon(SkySystem* sky, float dayTime) {
     renderSkyObject(&sky->moon);
 }
 
-// --- Cleanup ---
-/* Frees sky system resources */
 void skySystemDestroy(SkySystem* sky) {
     if (quadric) {
         gluDeleteQuadric(quadric);

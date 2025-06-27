@@ -7,23 +7,23 @@ int ph = 30;
 int fp_th = 0;
 int fp_ph = 0;
 int mode = 0;
-double dim = 5.0;
+double dim = 4.0;
 double len = 2;
 int n = 50000;
-int fov = 55;
+int fov = 85;
 double asp=1;
 char* views[] = {"Orthogonal", "Perspective", "First Person"};
 double EX = 0, EY = 0, EZ = 10;
 double AX = 0, AY = 0, AZ = 0;
 
 int light = 1;
-int ambient = 30;
+int ambient = 10;
 int diffuse = 100;
-int emission = 0;
+int emission = 15;
 int specular = 0;
 int light_distance = 5;
 int light_angle = 90;
-int light_height = 3;
+int light_height = 2;
 int light_move = 1;
 
 unsigned int leafTexture;
@@ -32,6 +32,7 @@ unsigned int brickTexture;
 unsigned int roofTexture;
 unsigned int sunTexture;
 unsigned int cloudTexture;
+unsigned int metalTexture;
 
 void projection() {
    glMatrixMode(GL_PROJECTION);
@@ -69,7 +70,7 @@ float Specular[] = {0.01 * specular, 0.01 * specular, 0.01 * specular, 1.0};
 float Position[] = {light_distance * Cos(light_angle), light_height, light_distance * Sin(light_angle), 1.0};
 
 glColor3f(1, 1, 1);
-Sun(Position[0], Position[1], Position[2], 0.5);
+Sun(Position[0], Position[1], Position[2], 0.3);
 
 glEnable(GL_NORMALIZE);
 glEnable(GL_LIGHTING);
@@ -85,7 +86,8 @@ glLightfv(GL_LIGHT0, GL_POSITION, Position);
   }
 
   glPushMatrix();
-  glColor3f(0, 0, 1);
+  Skyscraper(0.0, 0.0, 1.0, 1.0, 0.6, 2.2, 6, 20);
+
   House(-1, 0, 0, 0.3, 0.2, 0.3);
     House(0, 0, 0, 0.36, 0.24, 0.36);
     House(1, 0, 0, 0.3, 0.2, 0.3);
@@ -110,14 +112,15 @@ glLightfv(GL_LIGHT0, GL_POSITION, Position);
     Tree(1, 0, 1.8, 0.6);
 
     Cloud(-2.0, 2.5, -1.0, 0.3);  
-    Cloud(1.5, 2.7, 0.5, 0.25);
+    Cloud(1.5, 2.7, 0.5, 0.24);
     Cloud(-0.5, 2.9, -0.5, 0.2);
-    Cloud(0.8, 2.8, 1.5, 0.28);
+    Cloud(0.8, 2.8, 1.5, 0.26);
     Cloud(-1.2, 2.6, 1.0, 0.22);
-    Cloud(2.2, 2.4, -0.8, 0.25);
-    Cloud(-2.5, 2.8, 1.8, 0.3);
+    Cloud(2.2, 2.4, -0.8, 0.24);
+
 
   glPopMatrix();
+  glDisable(GL_POLYGON_OFFSET_FILL);
   glDisable(GL_LIGHTING);
   glColor3f(1, 1, 1);
   if (axes) {
@@ -197,11 +200,16 @@ void key(unsigned char ch, int x, int y) {
     th = ph = 30;
     fp_th = fp_ph = 0;
     axes = 0;
-    fov = 55;
-    dim = 5;
+    fov = 85;
+    dim = 4.0;
     light_move = 1;
     light_distance = 5;
-    light_height = 3;
+    light_height = 2;
+    ambient = 10;
+    diffuse = 100;
+    specular = 15;
+    emission = 0;
+    mode = 0;
     EX = 0;
     EY = 0;
     EZ = 10;
@@ -300,8 +308,9 @@ void reshape(int width,int height) {
 int main (int argc, char *argv[]) {
   glutInit(&argc,argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
-  glutInitWindowSize(800, 800);
+  glutInitWindowSize(1200, 1000);
   glutCreateWindow("Homework 3: Sanjay Baskaran");
+  glutFullScreen();
   glClearColor(0.043f, 0.114f, 0.318f, 1.0f);
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
@@ -315,6 +324,7 @@ int main (int argc, char *argv[]) {
   roofTexture = LoadTexBMP("textures/roof.bmp");
   sunTexture = LoadTexBMP("textures/sun.bmp");
   cloudTexture = LoadTexBMP("textures/cloud.bmp");
+  metalTexture = LoadTexBMP("textures/metal.bmp");
 
   glutMainLoop();
   return 0;

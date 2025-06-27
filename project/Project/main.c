@@ -1,16 +1,13 @@
-// ---------------------------------------------
-// main.c - Main entry and core logic for terrain demo
-// ---------------------------------------------
-
-#define GL_SILENCE_DEPRECATION
 #include "CSCIx229.h"
 #include "landscape.h"
-#include "objects.h"
-#include "weather_particles.h"
 #include "shaders.h"
 #include "sky.h"
 #include "sky_clouds.h"
 #include "camera.h"
+#include "fractal_tree.h"
+#include "objects_render.h"
+#include "particles.h"
+#include "grass.h"
 #include <stdbool.h>
 
 #ifdef __APPLE__
@@ -29,14 +26,15 @@
 #include <string.h>
 #include <math.h>
 
-// --- Global state ---
-/* Environmental systems and rendering resources */
 static SkyCloudSystem* cloudSystem = NULL;
 static SkySystem skySystemInstance;
 
 GLuint grassTexture = 0;
 GLuint rockTexture = 0;
 GLuint sandTexture = 0;
+GLuint boulderTexture = 0;
+GLuint barkTexture = 0;
+GLuint leafTexture = 0;
 int terrainShader = 0;
 int skyShader = 0;
 
@@ -59,44 +57,22 @@ static int showAxes = 0;
 static int animateLight = 1;
 static float lightSpeed = 1.0f; 
 
-/* Weather and particle system configuration */
-#define SNOW_PARTICLES 20000
-#define RAIN_PARTICLES 12000
-static WeatherParticleSystem* snowSystem = NULL;
-static WeatherParticleSystem* rainSystem = NULL;
-static int snowEnabled = 0;
-static int rainEnabled = 0;
-static int weatherType = 0;
-static float weatherIntensity = 1.0f;
-
-/* World and scene objects */
 Landscape* landscape = NULL;
-static ForestSystem* forest = NULL;
 
-/* Timing utilities */
 static float lastTime = 0;
 static float deltaTime = 0;
 
-/* Atmospheric effects */
 float fogDensity = 0.005f;
 int fogEnabled = 0;
 
 static int animateTime = 1;
 static float timeSpeed = 1.0f;
 
-/* Camera system and mouse interaction */
 static ViewCamera* camera = NULL;
 float asp;
 static int lastX = 0, lastY = 0;
 static int mouseButtons = 0;
 
-/* Environment object collections */
-static RockField* rocks = NULL;
-static ShrubField* shrubs = NULL;
-static LogField* logs = NULL;
-
-// --- Persistent camera state for view switching ---
-/* Stores view settings to allow seamless switching between camera modes */
 static float lastOrbitYaw = 45.0f, lastOrbitPitch = 10.0f, lastOrbitDistance = 70.0f;
 static int lastOrbitTh = 45, lastOrbitPh = 10;
 static float lastOrbitDim = 70.0f;
@@ -108,28 +84,16 @@ static const float INIT_ORBIT_DIM = 70.0f;
 static const float INIT_FP_POS[3] = {0.0f, 2.0f, 0.0f};
 static const float INIT_FP_YAW = 45.0f, INIT_FP_PITCH = 10.0f;
 
-// --- Gull model ---
-static GullFlock* gullFlock = NULL;
+float treeSwayAngle = 0.0f;
 
-static int showBirds = 1;
+static int snowOn = 0;
 
-// --- Function declarations ---
 void reshape(int width, int height);
 void display();
 void special(int key, int x, int y);
 void keyboard(unsigned char key, int x, int y);
 void idle();
 
-#define MAX_STARS 1000
-// Simple star struct for night sky
-typedef struct {
-    float x, y, z;
-    float brightness;
-} Star;
-Star stars[MAX_STARS];
-
-// --- Window reshape handler ---
-/* Updates projection matrix when window size changes */
 void reshape(int width, int height) {
     asp = (height>0) ? (double)width/height : 1;
     glViewport(0,0, RES*width,RES*height);
@@ -140,39 +104,33 @@ void reshape(int width, int height) {
     }
 }
 
-// --- Timing utilities ---
-/* Calculates time between frames for smooth animation */
 void updateDeltaTime() {
     float currentTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentTime - lastTime;
     lastTime = currentTime;
 }
 
-/* Maps 24-hour time to 0.0-1.0 range for shader inputs */
 float getNormalizedDayTime(float time) {
     return time / 24.0f;
 }
 
-/* Smooth transition function for natural blending */
 float smoothstep(float edge0, float edge1, float x) {
     float t = (x - edge0) / (edge1 - edge0);
     t = t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
     return t * t * (3.0f - 2.0f * t);
 }
 
-// --- Sky color interpolation for day/night cycle ---
-/* Computes sky color based on time of day with smooth transitions */
 void getSkyColor(float time, float* color) {
     float t = time / 24.0f;  
     const int NUM_COLORS = 6;
     float timePoints[6] = {0.0f, 0.25f, 0.4f, 0.6f, 0.75f, 1.0f};  
     float colors[6][3] = {
-        {0.02f, 0.02f, 0.1f},  // Night
-        {0.7f, 0.4f, 0.4f},    // Dawn
-        {0.4f, 0.7f, 1.0f},    // Day
-        {0.4f, 0.7f, 1.0f},    // Day
-        {0.7f, 0.4f, 0.4f},    // Dusk
-        {0.02f, 0.02f, 0.1f}   // Night
+        {0.02f, 0.02f, 0.1f},
+        {0.7f, 0.4f, 0.4f},
+        {0.4f, 0.7f, 1.0f},
+        {0.4f, 0.7f, 1.0f},
+        {0.7f, 0.4f, 0.4f},
+        {0.02f, 0.02f, 0.1f}
     };
     int i;
     for(i = 0; i < NUM_COLORS-1; i++) {
@@ -198,8 +156,6 @@ void getSkyColor(float time, float* color) {
     }
 }
 
-// --- Update ambient and diffuse lighting for day/night ---
-/* Adjusts scene lighting based on time of day */
 void updateDayCycle() {
     dayTime += deltaTime * 0.1f;  
     if (dayTime >= 24.0f) dayTime = 0.0f;
@@ -228,8 +184,6 @@ void updateDayCycle() {
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 }
 
-// --- Dynamic sun/moon lighting ---
-/* Updates light source position and parameters based on time of day */
 void updateDynamicLighting(float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
@@ -245,11 +199,10 @@ void updateDynamicLighting(float dayTime) {
     float diffuse[4];
     float specular[4];
     if (sunHeight > 0) {
-        // Sun is the primary light source during day
         lightPos[0] = sunX;
         lightPos[1] = sunY;
         lightPos[2] = sunZ;
-        lightPos[3] = 0.0f;  // Directional light
+        lightPos[3] = 0.0f;
         float intensity = 0.5f + sunHeight * 0.5f;
         ambient[0] = 0.15f + sunHeight * 0.15f;
         ambient[1] = 0.15f + sunHeight * 0.15f;
@@ -265,7 +218,6 @@ void updateDynamicLighting(float dayTime) {
         specular[3] = 1.0f;
     }
     else {
-        // Moon is the primary light source at night
         lightPos[0] = moonX;
         lightPos[1] = moonY;
         lightPos[2] = moonZ;
@@ -273,7 +225,7 @@ void updateDynamicLighting(float dayTime) {
         float moonIntensity = 0.15f + (-sunHeight) * 0.1f;
         ambient[0] = 0.02f;
         ambient[1] = 0.02f;
-        ambient[2] = 0.04f; // Slightly blue for night
+        ambient[2] = 0.04f;
         ambient[3] = 1.0f;
         diffuse[0] = moonIntensity * 0.7f;
         diffuse[1] = moonIntensity * 0.7f;
@@ -294,21 +246,13 @@ void updateDynamicLighting(float dayTime) {
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matShininess);
 }
 
-// --- Animate tree swaying for wind effect ---
-/* Updates tree tilt angles based on wind strength and time */
 void updateTreeAnimation() {
     static float windTime = 0.0f;
     windTime += deltaTime;
     windStrength = sin(windTime * 0.5f) * 0.5f + 0.5f;
-    for (int i = 0; i < forest->instanceCount; i++) {
-        float windEffect = windStrength * (1.0f + sin(forest->instances[i].x * 0.1f + windTime));
-        forest->instances[i].tiltX = sin(windTime + forest->instances[i].x) * windEffect * 5.0f;
-        forest->instances[i].tiltZ = cos(windTime * 0.7f + forest->instances[i].z) * windEffect * 5.0f;
-    }
+    treeSwayAngle = sin(windTime) * 8.0f;
 }
 
-// --- Lighting/material setup ---
-/* Configures OpenGL lighting state for the scene */
 void setupLighting() {
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
@@ -322,8 +266,6 @@ void setupLighting() {
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 }
 
-// --- Fog effect for atmosphere ---
-/* Configures fog parameters based on time of day */
 void updateFog(float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
@@ -331,7 +273,7 @@ void updateFog(float dayTime) {
     float baseDensity;
     float fogColor[4];
     if (sunHeight > 0) {
-        baseDensity = 0.003f;
+        baseDensity = 0.008f;
         fogColor[0] = 0.95f;
         fogColor[1] = 0.95f;
         fogColor[2] = 0.95f;
@@ -352,11 +294,11 @@ void updateFog(float dayTime) {
         glFogf(GL_FOG_START, fogStart);
         glFogf(GL_FOG_END, fogEnd);
         glHint(GL_FOG_HINT, GL_NICEST);
+    } else {
+        glDisable(GL_FOG);
     }
 }
 
-// --- OpenGL state initialization ---
-/* Sets up global rendering state for the scene */
 void initGL() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -368,8 +310,6 @@ void initGL() {
     glPolygonOffset(1.0f, 1.0f);
 }
 
-// --- Main display/render function ---
-/* Renders the complete scene with all objects and effects */
 void display() {
     float skyColor[3];
     getSkyColor(dayTime, skyColor);
@@ -382,65 +322,48 @@ void display() {
     skySystemRenderSunAndMoon(&skySystemInstance, dayTime);
     updateFog(dayTime);
     updateDynamicLighting(dayTime);
-    landscapeRender(landscape, weatherType);
-    useShader(0);
+    // --- Render clouds first, with depth offset and no depth writes ---
     if (cloudSystem) {
-        skyCloudSystemUpdate(cloudSystem, deltaTime, dayTime);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 100.0f);
+        glDepthMask(GL_FALSE);
         skyCloudSystemRender(cloudSystem, dayTime);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_POLYGON_OFFSET_FILL);
     }
-    if (forest && forest->instanceCount > 0) {
-        glPushMatrix();
-        glEnable(GL_LIGHTING);
-        glEnable(GL_COLOR_MATERIAL);
-        glShadeModel(GL_SMOOTH);
-        forestSystemRender(forest, dayTime, weatherType == 1);
-        glPopMatrix();
+    // --- Now render the rest of the scene ---
+    landscapeRender(landscape, 0);
+    // Render animated grass after terrain, before trees/objects
+    // Compute sun direction and ambient for grass shader
+    float timeNormalized = dayTime / 24.0f;
+    float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
+    float sunHeight = sin(sunAngle);
+    float sunX = 500 * cos(sunAngle);
+    float sunY = lightHeight * sunHeight;
+    float sunZ = 0;
+    float sunDir[3];
+    float len = sqrtf(sunX*sunX + sunY*sunY + sunZ*sunZ);
+    sunDir[0] = sunX / len;
+    sunDir[1] = sunY / len;
+    sunDir[2] = sunZ / len;
+    float ambient[3];
+    if (sunHeight > 0) {
+        ambient[0] = 0.15f + sunHeight * 0.15f;
+        ambient[1] = 0.15f + sunHeight * 0.15f;
+        ambient[2] = 0.15f + sunHeight * 0.15f;
+    } else {
+        ambient[0] = 0.02f;
+        ambient[1] = 0.02f;
+        ambient[2] = 0.04f;
     }
-    if (rocks && rocks->instanceCount > 0) {
-        glPushMatrix();
-        glEnable(GL_LIGHTING);
-        glEnable(GL_COLOR_MATERIAL);
-        glShadeModel(GL_SMOOTH);
-        rockFieldRender(rocks, weatherType == 1);
-        glPopMatrix();
-    }
-    if (shrubs && shrubs->instanceCount > 0) {
-        glPushMatrix();
-        glEnable(GL_LIGHTING);
-        glEnable(GL_COLOR_MATERIAL);
-        glShadeModel(GL_SMOOTH);
-        shrubFieldRender(shrubs, weatherType == 1);
-        glPopMatrix();
-    }
-    if (logs && logs->instanceCount > 0) {
-        glPushMatrix();
-        glEnable(GL_LIGHTING);
-        glEnable(GL_COLOR_MATERIAL);
-        glShadeModel(GL_SMOOTH);
-        logFieldRender(logs, weatherType == 1);
-        glPopMatrix();
-    }
-    // --- Render animated gull flock only ---
-    if (showBirds && gullFlock) {
-        gullFlockRender(gullFlock, 0);
-    }
+    grassSystemRender(dayTime, windStrength, sunDir, ambient);
+    renderLandscapeObjects(landscape);
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
     landscapeRenderWater(waterLevel, landscape, dayTime);
     glDepthMask(GL_TRUE);
-    if (snowEnabled && snowSystem) {
-        glDisable(GL_FOG);
-        weatherParticleSystemRender(snowSystem);
-        glEnable(GL_FOG);
-    }
-    if (rainEnabled && rainSystem) {
-        glDisable(GL_FOG);
-        weatherParticleSystemRender(rainSystem);
-        glEnable(GL_FOG);
-    }
-    glDisable(GL_FOG);
     if (showAxes) {
         glDisable(GL_DEPTH_TEST);
         glColor3f(1,1,1);
@@ -454,37 +377,32 @@ void display() {
         glEnd();
         glEnable(GL_DEPTH_TEST);
     }
-    // UI overlays
     glDisable(GL_DEPTH_TEST);
     glColor3f(1,1,1);
     glWindowPos2i(5, glutGet(GLUT_WINDOW_HEIGHT) - 20);
-    Print("Time: %02d:%02d  Weather: %s", 
-          (int)dayTime, (int)((dayTime-(int)dayTime)*60), 
-          weatherType ? "Winter" : "Fall");
+    Print("Time: %02d:%02d  Weather: Fall", 
+          (int)dayTime, (int)((dayTime-(int)dayTime)*60));
     int y = 5;
     glWindowPos2i(5, y);
-    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s   |   Birds: %s   |   Snow: %s   |   Rain: %s",
+    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s  Snow: %s",
         th, ph, dim, camera->mode == CAMERA_MODE_FREE_ORBIT ? "Free Orbit" : "First Person",
         waterLevel,
         wireframe,
         showAxes,
         animateTime ? "On" : "Off", timeSpeed,
         fogEnabled ? "On" : "Off",
-        showBirds ? "On" : "Off",
-        snowEnabled ? "On" : "Off",
-        rainEnabled ? "On" : "Off");
+        snowOn ? "On" : "Off");
     glEnable(GL_DEPTH_TEST);
+    if (snowOn) {
+        particleSystemRender();
+    }
     glutSwapBuffers();
 }
 
-// --- Sky shader loader ---
-/* Initializes the sky background shader program */
 void initSkyBackground() {
     skyShader = loadShader("shaders/sky_shader.vert", "shaders/sky_shader.frag");
 }
 
-// --- Mouse button handler ---
-/* Processes mouse button events for camera control */
 void mouse(int button, int state, int x, int y) {
     lastX = x;
     lastY = y;
@@ -507,8 +425,6 @@ void mouse(int button, int state, int x, int y) {
     glutPostRedisplay();
 }
 
-// --- Mouse drag handler ---
-/* Processes mouse movement for camera rotation and zoom */
 void mouseMotion(int x, int y) {
     int dx = x - lastX;
     int dy = y - lastY;
@@ -539,8 +455,6 @@ void mouseMotion(int x, int y) {
     glutPostRedisplay();
 }
 
-// --- Keyboard special keys (arrows, page up/down) ---
-/* Processes special key presses for camera movement */
 void special(int key, int x, int y) {
     float deltaTime = 0.016f;
     if (camera && camera->mode == CAMERA_MODE_FREE_ORBIT) {
@@ -602,11 +516,9 @@ void special(int key, int x, int y) {
     glutPostRedisplay();
 }
 
-// --- Keyboard handler for all main controls ---
-/* Processes standard key presses for scene control and effects */
 void keyboard(unsigned char key, int x, int y) {
     switch(key) {
-        case 27:  // ESC key
+        case 27:
             exit(0);
             break;
         case 'w':
@@ -623,7 +535,6 @@ void keyboard(unsigned char key, int x, int y) {
             showAxes = !showAxes;
             break;
         case 'r':
-            // Reset all persistent state
             lastOrbitYaw = INIT_ORBIT_YAW;
             lastOrbitPitch = INIT_ORBIT_PITCH;
             lastOrbitDistance = INIT_ORBIT_DISTANCE;
@@ -650,7 +561,6 @@ void keyboard(unsigned char key, int x, int y) {
             viewCameraUpdateVectors(camera);
             break;
         case '1': {
-            // Switch to first person, restore last FP state
             lastOrbitYaw = camera->horizontalAngle;
             lastOrbitPitch = camera->verticalAngle;
             lastOrbitDistance = camera->orbitDistance;
@@ -669,7 +579,6 @@ void keyboard(unsigned char key, int x, int y) {
             break;
         }
         case '2': {
-            // Switch to orbit, restore last orbit state
             lastFPPos[0] = camera->position[0];
             lastFPPos[1] = camera->position[1];
             lastFPPos[2] = camera->position[2];
@@ -695,17 +604,8 @@ void keyboard(unsigned char key, int x, int y) {
         case 'l':
             timeSpeed = fmin(5.0f, timeSpeed + 0.1f);
             break;
-        case 'q':
-            weatherType = (weatherType + 1) % 2;
-            break;
         case 'b':
             fogEnabled = !fogEnabled;
-            break;
-        case 'n':
-            snowEnabled = !snowEnabled;
-            break;
-        case 'm':
-            rainEnabled = !rainEnabled;
             break;
         case 'z':
             if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
@@ -725,15 +625,14 @@ void keyboard(unsigned char key, int x, int y) {
                 Project(fov?55:0, asp, dim);
             }
             break;
-        case 'v':
-            showBirds = !showBirds;
+        case 'n':
+            snowOn = !snowOn;
+            particleSystemSetEnabled(snowOn);
             break;
     }
     glutPostRedisplay();
 }
 
-// --- Idle handler for animation and updates ---
-/* Updates all animated systems between frames */
 void idle() {
     if (animateTime) {
         dayTime += deltaTime * timeSpeed;
@@ -744,39 +643,19 @@ void idle() {
         updateDayCycle();
     }
     viewCameraUpdate(camera, deltaTime);
-    if (snowEnabled && snowSystem) {
-        weatherParticleSystemUpdate(snowSystem, landscape, deltaTime, weatherIntensity, lastTime);
-    }
-    if (rainEnabled && rainSystem) {
-        weatherParticleSystemUpdate(rainSystem, landscape, deltaTime, weatherIntensity, lastTime);
-    }
     updateTreeAnimation();
-    if (gullFlock) {
-        gullFlockUpdate(gullFlock, landscape, deltaTime);
-    }
     if (animateWater) {
         waterTime += deltaTime;
+    }
+    if (cloudSystem) {
+        skyCloudSystemUpdate(cloudSystem, deltaTime, dayTime);
+    }
+    if (snowOn) {
+        particleSystemUpdate(deltaTime);
     }
     glutPostRedisplay();
 }
 
-// --- Weather system initialization ---
-/* Creates and configures the particle systems for weather effects */
-void initWeatherSystem() {
-    printf("Initializing weather system...\n");
-    snowSystem = weatherParticleSystemCreate(SNOW_PARTICLES, WEATHER_PARTICLE_SNOW);
-    if (!snowSystem) {
-        fprintf(stderr, "Failed to create particle system\n");
-        return;
-    }
-    printf("Weather system initialized: Type=%d, Particles=%d\n", 
-           snowSystem->type, snowSystem->maxParticles);
-    snowSystem->emitterY = lightHeight;
-    snowSystem->emitterRadius = LANDSCAPE_SCALE * 0.5f;
-}
-
-// --- Main entry point ---
-/* Program initialization and main loop entry */
 int main(int argc, char* argv[]) {
     glutInit(&argc,argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
@@ -785,19 +664,22 @@ int main(int argc, char* argv[]) {
     glutInitWindowSize(screenWidth, screenHeight);
     glutCreateWindow("Project: Sanjay Baskaran");
     
-    // Initialize all major subsystems
     landscape = landscapeCreate();
     if (!landscape) {
         fprintf(stderr, "Failed to create landscape\n");
         return 1;
     }
+    // Initialize animated grass system
+    grassSystemInit(landscape, LANDSCAPE_SCALE, 500000);
+    particleSystemUploadHeightmap(landscape->elevationData);
+    initLandscapeObjects(landscape);
+    initBoulders(landscape);
     camera = viewCameraCreate();
     if (!camera) {
         fprintf(stderr, "Failed to create camera\n");
         return 1;
     }
     
-    // Set up initial camera configuration
     lastOrbitYaw = INIT_ORBIT_YAW;
     lastOrbitPitch = INIT_ORBIT_PITCH;
     lastOrbitDistance = INIT_ORBIT_DISTANCE;
@@ -817,39 +699,13 @@ int main(int argc, char* argv[]) {
     viewCameraSetMode(camera, CAMERA_MODE_FREE_ORBIT);
     viewCameraUpdateVectors(camera);
     
-    // Initialize vegetation systems
-    forest = forestSystemCreate();
-    if (!forest) {
-        fprintf(stderr, "Failed to create forest system\n");
-        return 1;
-    }
-    
-    // Initialize weather systems
-    printf("Initializing weather system...\n");
-    snowSystem = weatherParticleSystemCreate(SNOW_PARTICLES, WEATHER_PARTICLE_SNOW);
-    if (!snowSystem) {
-        fprintf(stderr, "Failed to create particle system\n");
-        return 1;
-    }
-    snowSystem->emitterY = lightHeight;
-    snowSystem->emitterRadius = LANDSCAPE_SCALE * 0.5f;
-    rainSystem = weatherParticleSystemCreate(RAIN_PARTICLES, WEATHER_PARTICLE_RAIN);
-    if (!rainSystem) {
-        fprintf(stderr, "Failed to create rain particle system\n");
-        return 1;
-    }
-    rainSystem->emitterY = lightHeight;
-    rainSystem->emitterRadius = LANDSCAPE_SCALE * 0.5f;
-    
-    // Initialize sky and cloud systems
     skySystemInit(&skySystemInstance);
     cloudSystem = skyCloudSystemCreate(LANDSCAPE_SCALE * 0.4f);
     if (!cloudSystem) {
         fprintf(stderr, "Failed to create cloud system\n");
         return 1;
     }
-    
-    // Load shaders and textures
+
     terrainShader = loadShader("shaders/terrain_shader.vert", "shaders/terrain_shader.frag");
     if (!terrainShader) {
         fprintf(stderr, "Failed to load terrain shaders\n");
@@ -872,9 +728,23 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Failed to load sand texture\n");
         return 1;
     }
+    if (!(boulderTexture = LoadTexBMP("tex/boulder.bmp"))) {
+        fprintf(stderr, "Failed to load boulder texture\n");
+        return 1;
+    }
+    if (!(barkTexture = LoadTexBMP("tex/bark.bmp"))) {
+        fprintf(stderr, "Failed to load bark texture\n");
+        return 1;
+    }
+    if (!(leafTexture = LoadTexBMP("tex/leaf.bmp"))) {
+        fprintf(stderr, "Failed to load leaf texture\n");
+        return 1;
+    }
     
-    // Generate scene content
-    forestSystemGenerate(forest, landscape);
+    // Initialize fractal tree shaders
+    fractalTreeInit();
+    boulderShaderInit();
+    
     setupLighting();
     float mSpecular[] = {0.3f, 0.3f, 0.3f, 1.0f};
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mSpecular);
@@ -884,18 +754,8 @@ int main(int argc, char* argv[]) {
     glEnable(GL_NORMALIZE);
     lastTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     
-    // Initialize decorative scene elements
-    rocks = rockFieldCreate(100);
-    rockFieldGenerate(rocks, landscape);
-    shrubs = shrubFieldCreate(80);
-    shrubFieldGenerate(shrubs, landscape);
-    logs = logFieldCreate(60);
-    logFieldGenerate(logs, landscape);
+    particleSystemInit(2000.0f, 20000.0f);
     
-    // Load gull OBJ model
-    gullFlock = gullFlockCreate(8, 4, LANDSCAPE_SCALE);
-    
-    // Set up GLUT callbacks
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutSpecialFunc(special);
@@ -905,23 +765,17 @@ int main(int argc, char* argv[]) {
     glutMotionFunc(mouseMotion);
     glutPassiveMotionFunc(NULL);
     
-    // Enter main loop
     glutMainLoop();
     
-    // Cleanup resources
-    weatherParticleSystemDestroy(snowSystem);
-    weatherParticleSystemDestroy(rainSystem);
-    forestSystemDestroy(forest);
     landscapeDestroy(landscape);
+    freeBoulders();
+    freeLandscapeObjects();
     skyCloudSystemDestroy(cloudSystem);
     deleteShader(terrainShader);
     deleteShader(skyShader);
     viewCameraDestroy(camera);
-    rockFieldDestroy(rocks);
-    shrubFieldDestroy(shrubs);
-    logFieldDestroy(logs);
-    skySystemDestroy(&skySystemInstance);
-    gullFlockDestroy(gullFlock);
-    
+    particleSystemCleanup();
+    // Cleanup grass system
+    grassSystemCleanup();
     return 0;
 }

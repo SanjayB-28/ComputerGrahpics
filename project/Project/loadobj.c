@@ -1,24 +1,16 @@
-// ---------------------------------------------
-// loadobj.c - Minimalist Wavefront OBJ loader for OpenGL
-// ---------------------------------------------
-
 #include "CSCIx229.h"
 #include <ctype.h>
 
-// --- Material structures and storage ---
-/* Structure to store material properties from MTL files */
 typedef struct {
     char* name;
-    float Ka[4], Kd[4], Ks[4], Ns;  // Ambient, diffuse, specular components and shininess
-    float d;                         // Transparency
-    int map;                         // Texture map ID
+    float Ka[4], Kd[4], Ks[4], Ns;  
+    float d;                        
+    int map;                         
 } mtl_t;
 
 static int Nmtl = 0;
 static mtl_t* mtl = NULL;
 
-// --- File parsing utilities ---
-/* Character and line processing for OBJ/MTL file parsing */
 static int CRLF(char ch) {
     return ch == '\r' || ch == '\n';
 }
@@ -59,7 +51,6 @@ static char* getword(char** line) {
     return word;
 }
 
-/* Parse floating point values from OBJ/MTL data */
 static void readfloat(char* line, int n, float x[]) {
     for (int i = 0; i < n; i++) {
         char* str = getword(&line);
@@ -87,8 +78,6 @@ static char* readstr(char* line, const char* skip) {
     return getword(&line);
 }
 
-// --- Material loading and management ---
-/* Load and process material definitions from MTL files */
 static void LoadMaterial(const char* file) {
     int k = -1;
     char* line;
@@ -130,7 +119,6 @@ static void LoadMaterial(const char* file) {
     fclose(f);
 }
 
-/* Apply a material to the current OpenGL state */
 static void SetMaterial(const char* name) {
     for (int k = 0; k < Nmtl; k++) {
         if (!strcmp(mtl[k].name, name)) {
@@ -150,15 +138,12 @@ static void SetMaterial(const char* name) {
     fprintf(stderr, "Unknown material %s\n", name);
 }
 
-// --- Main OBJ loading function ---
-/* Loads a Wavefront OBJ file into an OpenGL display list
-   Handles geometry, normals, texture coordinates and materials */
 int LoadOBJ(const char* file) {
-    int Nv, Nn, Nt;        // Current count of vertices, normals, textures
-    int Mv, Mn, Mt;        // Allocated memory for vertices, normals, textures
-    float* V;              // Vertex coordinates
-    float* N;              // Normal vectors
-    float* T;              // Texture coordinates
+    int Nv, Nn, Nt;        
+    int Mv, Mn, Mt;        
+    float* V;              
+    float* N;              
+    float* T;              
     char* line;
     char* str;
     FILE* f = fopen(file, "r");
@@ -213,7 +198,6 @@ int LoadOBJ(const char* file) {
     glPopAttrib();
     glEndList();
     
-    /* Cleanup allocated resources */
     for (int k = 0; k < Nmtl; k++)
         free(mtl[k].name);
     free(mtl);

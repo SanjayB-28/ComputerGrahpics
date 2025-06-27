@@ -1,7 +1,3 @@
-// ---------------------------------------------
-// sky_clouds.c - Procedural cloud system
-// ---------------------------------------------
-
 #include "sky_clouds.h"
 #include <stdlib.h>
 #include <math.h>
@@ -15,20 +11,20 @@
 #include <GL/gl.h>
 #endif
 
-// --- Cloud system creation ---
-/* Creates a cloud system with random formations */
 SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
     SkyCloudSystem* cs = (SkyCloudSystem*)malloc(sizeof(SkyCloudSystem));
     if (!cs) return NULL;
     cs->cloudCount = 120;
-    cs->baseHeight = baseHeight;
+    cs->baseHeight = baseHeight + 30.0f;
     cs->windSpeed = 0.15f;
+    cs->smoothBrightness = 1.0f;
+    cs->smoothAlpha = 1.0f;
     for (int i = 0; i < cs->cloudCount; i++) {
         SkyCloud* cloud = &cs->clouds[i];
-        cloud->x = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 1.2f;
-        cloud->z = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 1.2f;
-        cloud->y = baseHeight + 60.0f + ((float)rand()/RAND_MAX) * 10.0f;
-        cloud->size = 20.0f + ((float)rand()/RAND_MAX) * 15.0f;
+        cloud->x = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 2.0f;
+        cloud->z = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 2.0f;
+        cloud->y = cs->baseHeight + 60.0f + ((float)rand()/RAND_MAX) * 30.0f;
+        cloud->size = 30.0f + ((float)rand()/RAND_MAX) * 20.0f;
         cloud->alpha = 0.3f + ((float)rand()/RAND_MAX) * 0.2f;
         cloud->speed = 0.05f + ((float)rand()/RAND_MAX) * 0.05f;
         cloud->variation = ((float)rand()/RAND_MAX);
@@ -36,31 +32,75 @@ SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
     return cs;
 }
 
-// --- Cloud update logic ---
-/* Updates cloud positions and recycles clouds outside bounds */
+void getCloudColor(float dayTime, float* color) {
+    float t = dayTime / 24.0f;
+    float sunrise[3] = {1.0f, 0.7f, 0.5f};
+    float midday[3] = {1.0f, 1.0f, 1.0f};
+    float sunset[3] = {1.0f, 0.7f, 0.5f};
+    float night[3] = {0.5f, 0.5f, 0.6f};
+    float colorOut[3];
+    if (t < 0.2f) {
+        float f = t / 0.2f;
+        for (int i = 0; i < 3; ++i)
+            colorOut[i] = night[i] * (1.0f - f) + sunrise[i] * f;
+    } else if (t < 0.3f) {
+        float f = (t - 0.2f) / 0.1f;
+        for (int i = 0; i < 3; ++i)
+            colorOut[i] = sunrise[i] * (1.0f - f) + midday[i] * f;
+    } else if (t < 0.7f) {
+        for (int i = 0; i < 3; ++i)
+            colorOut[i] = midday[i];
+    } else if (t < 0.8f) {
+        float f = (t - 0.7f) / 0.1f;
+        for (int i = 0; i < 3; ++i)
+            colorOut[i] = midday[i] * (1.0f - f) + sunset[i] * f;
+    } else {
+        float f = (t - 0.8f) / 0.2f;
+        for (int i = 0; i < 3; ++i)
+            colorOut[i] = sunset[i] * (1.0f - f) + night[i] * f;
+    }
+    color[0] = colorOut[0];
+    color[1] = colorOut[1];
+    color[2] = colorOut[2];
+}
+
 void skyCloudSystemUpdate(SkyCloudSystem* cs, float deltaTime, float dayTime) {
+    float timeNormalized = dayTime / 24.0f;
+    float sunHeight = sin((timeNormalized - 0.25f) * 2 * M_PI);
+    float dayFactor = fmaxf(0.0f, sunHeight);
+    float targetBrightness = 0.85f + 0.25f * dayFactor;
+    float targetAlpha = 0.7f + 0.6f * dayFactor;
+    float lerpSpeed = fminf(1.0f, deltaTime * 2.0f); // Smooth over ~0.5s
+    cs->smoothBrightness += (targetBrightness - cs->smoothBrightness) * lerpSpeed;
+    cs->smoothAlpha += (targetAlpha - cs->smoothAlpha) * lerpSpeed;
+    float buffer = 40.0f;
     for (int i = 0; i < cs->cloudCount; i++) {
         SkyCloud* cloud = &cs->clouds[i];
         cloud->x += cloud->speed * cs->windSpeed * deltaTime;
-        if (cloud->x > LANDSCAPE_SCALE) {
-            cloud->x = -LANDSCAPE_SCALE;
-            cloud->z = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE;
+        // Wrap in X with buffer
+        if (cloud->x > LANDSCAPE_SCALE + buffer) {
+            cloud->x = -LANDSCAPE_SCALE - buffer;
+            cloud->z = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 2.0f;
+            cloud->size = 30.0f + ((float)rand()/RAND_MAX) * 20.0f;
+            cloud->alpha = 0.15f + ((float)rand()/RAND_MAX) * 0.15f;
+        }
+        if (cloud->x < -LANDSCAPE_SCALE - buffer) {
+            cloud->x = LANDSCAPE_SCALE + buffer;
+            cloud->z = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 2.0f;
             cloud->size = 30.0f + ((float)rand()/RAND_MAX) * 20.0f;
             cloud->alpha = 0.15f + ((float)rand()/RAND_MAX) * 0.15f;
         }
     }
 }
 
-// --- Cloud rendering ---
-/* Renders clouds as multi-layered billboards */
 void skyCloudSystemRender(SkyCloudSystem* cs, float dayTime) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
-    float timeNormalized = dayTime / 24.0f;
-    float sunHeight = sin((timeNormalized - 0.25f) * 2 * M_PI);
-    float brightness = 0.95f + 0.05f * fmaxf(sunHeight, 0.0f);
+    float brightness = cs->smoothBrightness;
+    float globalAlpha = cs->smoothAlpha;
+    float cloudColor[3];
+    getCloudColor(dayTime, cloudColor);
     for (int i = 0; i < cs->cloudCount; i++) {
         SkyCloud* cloud = &cs->clouds[i];
         for (int layer = 0; layer < 6; layer++) {
@@ -68,9 +108,10 @@ void skyCloudSystemRender(SkyCloudSystem* cs, float dayTime) {
             float bulge = sinf(t * M_PI) * 1.5f;
             float layerSize = cloud->size * (1.0f - t * 0.25f);
             float layerAlpha = cloud->alpha * (0.6f - t * 0.1f);
+            layerAlpha *= globalAlpha;
             float layerHeight = cloud->y + bulge * 12.0f;
             glBegin(GL_TRIANGLE_FAN);
-            glColor4f(brightness, brightness, brightness, layerAlpha);
+            glColor4f(cloudColor[0] * brightness, cloudColor[1] * brightness, cloudColor[2] * brightness, layerAlpha);
             glVertex3f(cloud->x, layerHeight + bulge * 3.0f, cloud->z);
             int segments = 16;
             for (int j = 0; j <= segments; j++) {
@@ -90,8 +131,6 @@ void skyCloudSystemRender(SkyCloudSystem* cs, float dayTime) {
     glDisable(GL_BLEND);
 }
 
-// --- Cloud system cleanup ---
-/* Frees cloud system memory */
 void skyCloudSystemDestroy(SkyCloudSystem* cs) {
     if (cs) {
         free(cs);
