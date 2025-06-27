@@ -36,7 +36,7 @@ static float randf(float a, float b) {
 
 void grassSystemInit(Landscape* landscape, float areaSize, int numBlades) {
     grassCount = numBlades;
-    float clampFactor = 0.95f;
+    float clampFactor = 0.98f;
     float halfScale = areaSize * 0.5f * clampFactor;
     GrassVertex* data = (GrassVertex*)malloc(sizeof(GrassVertex) * 6 * numBlades);
     for (int i = 0; i < numBlades; ++i) {

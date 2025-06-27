@@ -316,7 +316,7 @@ void display() {
     glClearColor(skyColor[0], skyColor[1], skyColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-    gluLookAt(camera->position[0], camera->position[1], camera->position[2],
+    gluLookAt(camera->fpPosition[0], camera->fpPosition[1], camera->fpPosition[2],
               camera->lookAt[0], camera->lookAt[1], camera->lookAt[2],
               camera->upVec[0], camera->upVec[1], camera->upVec[2]);
     skySystemRenderSunAndMoon(&skySystemInstance, dayTime);
@@ -432,12 +432,12 @@ void mouseMotion(int x, int y) {
         if (mouseButtons & 1) {
             th += dx;
             ph += dy;
-            camera->horizontalAngle += dx;
-            camera->verticalAngle += dy;
+            camera->orbitYaw += dx;
+            camera->orbitPitch += dy;
             if (ph > 89) ph = 89;
             if (ph < -89) ph = -89;
-            if (camera->verticalAngle > 89) camera->verticalAngle = 89;
-            if (camera->verticalAngle < -89) camera->verticalAngle = -89;
+            if (camera->orbitPitch > 89) camera->orbitPitch = 89;
+            if (camera->orbitPitch < -89) camera->orbitPitch = -89;
         }
         else if (mouseButtons & 4) {
             dim *= (1 + dy/100.0);
@@ -461,24 +461,24 @@ void special(int key, int x, int y) {
         switch(key) {
             case GLUT_KEY_RIGHT:
                 th += 5;
-                camera->horizontalAngle = th;  
+                camera->orbitYaw = th;  
                 break;
             case GLUT_KEY_LEFT:
                 th -= 5;
-                camera->horizontalAngle = th;
+                camera->orbitYaw = th;
                 break;
             case GLUT_KEY_UP:
                 if (ph < 89) {
                     ph += 5;
                     if (ph < 10) ph = 10;
-                    camera->verticalAngle = ph; 
+                    camera->orbitPitch = ph; 
                 }
                 break;
             case GLUT_KEY_DOWN:
                 if (ph > -89) {
                     ph -= 5;
                     if (ph < 10) ph = 10;
-                    camera->verticalAngle = ph;
+                    camera->orbitPitch = ph;
                 }
                 break;
             case GLUT_KEY_PAGE_DOWN:
@@ -554,38 +554,38 @@ void keyboard(unsigned char key, int x, int y) {
             waterSpeed = 1.0f;
             lightSpeed = 1.0f;
             fov = 1;
-            camera->horizontalAngle = lastOrbitYaw;
-            camera->verticalAngle = lastOrbitPitch;
+            camera->orbitYaw = lastOrbitYaw;
+            camera->orbitPitch = lastOrbitPitch;
             camera->orbitDistance = lastOrbitDistance;
             viewCameraSetMode(camera, CAMERA_MODE_FREE_ORBIT);
             viewCameraUpdateVectors(camera);
             break;
         case '1': {
-            lastOrbitYaw = camera->horizontalAngle;
-            lastOrbitPitch = camera->verticalAngle;
+            lastOrbitYaw = camera->orbitYaw;
+            lastOrbitPitch = camera->orbitPitch;
             lastOrbitDistance = camera->orbitDistance;
             lastOrbitTh = th;
             lastOrbitPh = ph < 10 ? 10 : ph;
             lastOrbitDim = dim;
-            camera->horizontalAngle = lastFPYaw;
-            camera->verticalAngle = lastFPPitch < 5.0f ? 10.0f : lastFPPitch;
-            camera->position[0] = lastFPPos[0];
-            camera->position[2] = lastFPPos[2];
-            float groundHeight = landscapeGetHeight(landscape, camera->position[0], camera->position[2]);
-            camera->position[1] = groundHeight + 2.0f;
+            camera->fpYaw = lastFPYaw;
+            camera->fpPitch = lastFPPitch < 5.0f ? 10.0f : lastFPPitch;
+            camera->fpPosition[0] = lastFPPos[0];
+            camera->fpPosition[2] = lastFPPos[2];
+            float groundHeight = landscapeGetHeight(landscape, camera->fpPosition[0], camera->fpPosition[2]);
+            camera->fpPosition[1] = groundHeight + 2.0f;
             viewCameraSetMode(camera, CAMERA_MODE_FIRST_PERSON);
             viewCameraUpdateVectors(camera);
             viewCameraSetProjection(camera, 55.0f, asp, dim/4, dim*4);
             break;
         }
         case '2': {
-            lastFPPos[0] = camera->position[0];
-            lastFPPos[1] = camera->position[1];
-            lastFPPos[2] = camera->position[2];
-            lastFPYaw = camera->horizontalAngle;
-            lastFPPitch = camera->verticalAngle;
-            camera->horizontalAngle = lastOrbitYaw;
-            camera->verticalAngle = lastOrbitPitch;
+            lastFPPos[0] = camera->fpPosition[0];
+            lastFPPos[1] = camera->fpPosition[1];
+            lastFPPos[2] = camera->fpPosition[2];
+            lastFPYaw = camera->fpYaw;
+            lastFPPitch = camera->fpPitch;
+            camera->orbitYaw = lastOrbitYaw;
+            camera->orbitPitch = lastOrbitPitch;
             camera->orbitDistance = lastOrbitDistance;
             th = lastOrbitTh;
             ph = lastOrbitPh < 10 ? 10 : lastOrbitPh;
@@ -692,8 +692,8 @@ int main(int argc, char* argv[]) {
     lastFPPos[1] = groundHeight + 2.0f;
     lastFPYaw = INIT_FP_YAW;
     lastFPPitch = INIT_FP_PITCH;
-    camera->horizontalAngle = lastOrbitYaw;
-    camera->verticalAngle = lastOrbitPitch;
+    camera->orbitYaw = lastOrbitYaw;
+    camera->orbitPitch = lastOrbitPitch;
     camera->orbitDistance = lastOrbitDistance;
     dim = lastOrbitDim;
     viewCameraSetMode(camera, CAMERA_MODE_FREE_ORBIT);

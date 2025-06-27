@@ -13,12 +13,17 @@ typedef enum {
 } CameraMoveDir;
 
 typedef struct {
-    float position[3];
+    // First-person mode state
+    float fpPosition[3];
+    float fpYaw;   // Yaw angle (degrees)
+    float fpPitch; // Pitch angle (degrees)
+    // Orbit mode state
+    float orbitYaw;   // Yaw angle (degrees)
+    float orbitPitch; // Pitch angle (degrees)
+    float orbitDistance;
+    // Common
     float lookAt[3];
     float upVec[3];
-    float horizontalAngle;
-    float verticalAngle;
-    float orbitDistance;
     CameraMode mode;
 } ViewCamera;
 
