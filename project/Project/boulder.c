@@ -1,3 +1,6 @@
+#ifndef __APPLE__
+#include <GL/glew.h>
+#endif
 #include "boulder.h"
 #include "objects_render.h"
 #include "landscape.h"

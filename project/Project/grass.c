@@ -1,5 +1,5 @@
-#ifdef __APPLE__
-#define GL_SILENCE_DEPRECATION
+#ifndef __APPLE__
+#include <GL/glew.h>
 #endif
 #include "CSCIx229.h"
 #include "grass.h"

@@ -16,7 +16,7 @@ LIBS=-framework GLUT -framework OpenGL -L/opt/homebrew/opt/sdl2/lib -L/opt/homeb
 # Linux/Unix
 else
 CFLG=-O3 -Wall                   
-LIBS=-lglut -lGLU -lGL -lm -lSDL2 -lSDL2_mixer
+LIBS=-lGLEW -lglut -lGLU -lGL -lm -lSDL2 -lSDL2_mixer
 endif
 CLEAN=rm -f $(EXE) *.o *.a
 endif

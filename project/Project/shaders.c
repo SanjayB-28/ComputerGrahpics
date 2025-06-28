@@ -1,3 +1,6 @@
+#ifndef __APPLE__
+#include <GL/glew.h>
+#endif
 #include "CSCIx229.h"
 #include "shaders.h"
 

@@ -56,7 +56,8 @@ make
 - T: Toggle time animation
 - ( ): Adjust time speed
 - F: Toggle fog
-- W: Toggle weather
+- W: Toggle weather (Fall/Winter - changes landscape appearance)
+- N: Toggle snow particles (independent of weather)
 - [ ]: Adjust water level
 - 8/9: Adjust fog density
 

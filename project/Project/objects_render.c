@@ -1,3 +1,6 @@
+#ifndef __APPLE__
+#include <GL/glew.h>
+#endif
 #include "objects_render.h"
 #include "fractal_tree.h"
 #include "boulder.h"

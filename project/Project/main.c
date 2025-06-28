@@ -1,3 +1,6 @@
+#ifndef __APPLE__
+#include <GL/glew.h>
+#endif
 #include "CSCIx229.h"
 #include "landscape.h"
 #include "shaders.h"
@@ -80,6 +83,7 @@ static const float INIT_FP_YAW = 45.0f, INIT_FP_PITCH = 10.0f;
 float treeSwayAngle = 0.0f;
 
 static int snowOn = 0;
+static int weatherType = 0;
 
 static int ambientSoundOn = 1;
 
@@ -240,7 +244,7 @@ void display() {
         skyCloudSystemRender(cloudSystem, dayTime);
         glDepthMask(GL_TRUE);
     }
-    landscapeRender(landscape, 0);
+    landscapeRender(landscape, weatherType);
     float timeNormalized = dayTime / 24.0f;
     float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
     float sunHeight = sin(sunAngle);
@@ -286,8 +290,9 @@ void display() {
     glDisable(GL_DEPTH_TEST);
     glColor3f(1,1,1);
     glWindowPos2i(5, glutGet(GLUT_WINDOW_HEIGHT) - 20);
-    Print("Time: %02d:%02d  Weather: Fall", 
-          (int)dayTime, (int)((dayTime-(int)dayTime)*60));
+    Print("Time: %02d:%02d  Weather: %s", 
+          (int)dayTime, (int)((dayTime-(int)dayTime)*60),
+          weatherType == 1 ? "Winter" : "Fall");
     int y = 5;
     glWindowPos2i(5, y);
     Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s  Snow: %s  |   Sound: %s",
@@ -523,6 +528,13 @@ void keyboard(unsigned char key, int x, int y) {
             snowOn = !snowOn;
             particleSystemSetEnabled(snowOn);
             break;
+        case 'W':
+            weatherType = !weatherType;
+            if (weatherType == 1) {
+                snowOn = 1;
+                particleSystemSetEnabled(1);
+            }
+            break;
         case 'm':
             ambientSoundOn = !ambientSoundOn;
             if (ambientSoundOn) {
@@ -562,6 +574,13 @@ int main(int argc, char* argv[]) {
     int screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
     glutInitWindowSize(screenWidth, screenHeight);
     glutCreateWindow("Project: Sanjay Baskaran");
+#ifndef __APPLE__
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        fprintf(stderr, "GLEW initialization failed: %s\n", glewGetErrorString(err));
+        return 1;
+    }
+#endif
     
     landscape = landscapeCreate();
     if (!landscape) {
