@@ -1,20 +1,11 @@
 #include "sky_clouds.h"
-#include <stdlib.h>
-#include <math.h>
 #include "landscape.h"
-
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glut.h>
-#include <GL/gl.h>
-#endif
+#include "CSCIx229.h"
 
 SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
     SkyCloudSystem* cs = (SkyCloudSystem*)malloc(sizeof(SkyCloudSystem));
     if (!cs) return NULL;
-    cs->cloudCount = 120;
+    cs->cloudCount = 100;
     cs->baseHeight = baseHeight + 30.0f;
     cs->windSpeed = 0.15f;
     cs->smoothBrightness = 1.0f;
@@ -27,7 +18,6 @@ SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
         cloud->size = 30.0f + ((float)rand()/RAND_MAX) * 20.0f;
         cloud->alpha = 0.3f + ((float)rand()/RAND_MAX) * 0.2f;
         cloud->speed = 0.05f + ((float)rand()/RAND_MAX) * 0.05f;
-        cloud->variation = ((float)rand()/RAND_MAX);
     }
     return cs;
 }
@@ -70,14 +60,13 @@ void skyCloudSystemUpdate(SkyCloudSystem* cs, float deltaTime, float dayTime) {
     float dayFactor = fmaxf(0.0f, sunHeight);
     float targetBrightness = 0.85f + 0.25f * dayFactor;
     float targetAlpha = 0.7f + 0.6f * dayFactor;
-    float lerpSpeed = fminf(1.0f, deltaTime * 2.0f); // Smooth over ~0.5s
+    float lerpSpeed = fminf(1.0f, deltaTime * 2.0f);
     cs->smoothBrightness += (targetBrightness - cs->smoothBrightness) * lerpSpeed;
     cs->smoothAlpha += (targetAlpha - cs->smoothAlpha) * lerpSpeed;
     float buffer = 40.0f;
     for (int i = 0; i < cs->cloudCount; i++) {
         SkyCloud* cloud = &cs->clouds[i];
         cloud->x += cloud->speed * cs->windSpeed * deltaTime;
-        // Wrap in X with buffer
         if (cloud->x > LANDSCAPE_SCALE + buffer) {
             cloud->x = -LANDSCAPE_SCALE - buffer;
             cloud->z = ((float)rand()/RAND_MAX - 0.5f) * LANDSCAPE_SCALE * 2.0f;

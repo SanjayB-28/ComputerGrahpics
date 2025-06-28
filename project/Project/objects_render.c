@@ -1,19 +1,15 @@
 #include "objects_render.h"
 #include "fractal_tree.h"
-#include <math.h>
-#include <stdlib.h>
+#include "boulder.h"
+#include "CSCIx229.h"
 
 static float getSlopeAt(Landscape* landscape, float x, float z);
-
-// Helper to compute slope at a point (x, z) using landscape normals
-typedef struct {
-    float x, z;
-} Vec2;
 
 TreeInstance* treeInstances = NULL;
 int numTrees = 0;
 
 extern float treeSwayAngle;
+extern float waterLevel;
 
 void freeLandscapeObjects() {
     if (treeInstances) {
@@ -38,7 +34,7 @@ void initLandscapeObjects(Landscape* landscape) {
     int maxTrees = grid * grid;
     treeInstances = (TreeInstance*)malloc(sizeof(TreeInstance) * maxTrees);
     numTrees = 0;
-    float halfScale = LANDSCAPE_SCALE * 0.5f * 0.95f; // 95% of the landscape
+    float halfScale = LANDSCAPE_SCALE * 0.5f * 0.95f;
     float step = (LANDSCAPE_SCALE * 0.95f) / (float)grid;
     for (int i = 0; i < grid; ++i) {
         for (int j = 0; j < grid; ++j) {
@@ -50,10 +46,10 @@ void initLandscapeObjects(Landscape* landscape) {
             if (y > treeParams.maxHeight) continue;
             if (slope < treeParams.minSlope || slope > treeParams.maxSlope) continue;
             if (y - waterLevel < treeParams.minDistanceFromWater) continue;
-            float scale = 1.8f + (rand()/(float)RAND_MAX) * 2.2f; // More varied size
+            float scale = 1.8f + (rand()/(float)RAND_MAX) * 2.2f;
             int depth = 4 + rand() % 2;
-            float rotation = (rand()/(float)RAND_MAX) * 360.0f; // Random Y rotation
-            unsigned int branchBias = rand(); // Per-tree random bias
+            float rotation = (rand()/(float)RAND_MAX) * 360.0f;
+            unsigned int branchBias = rand();
             int leafColorIndex = rand() % 8;
             treeInstances[numTrees++] = (TreeInstance){x, y, z, scale, depth, rotation, branchBias, leafColorIndex};
         }
@@ -87,8 +83,6 @@ void renderLandscapeObjects(Landscape* landscape) {
         fractalTreeDraw(0, 0, 0, t->scale, t->depth, t->branchBias, t->leafColorIndex);
         glPopMatrix();
     }
-    // Future: add rocks, shrubs, etc. here
 
-    // Render boulders
-    renderBoulders(landscape);
+    renderBoulders();
 } 

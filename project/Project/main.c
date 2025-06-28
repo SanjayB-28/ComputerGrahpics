@@ -8,7 +8,8 @@
 #include "objects_render.h"
 #include "particles.h"
 #include "grass.h"
-#include <stdbool.h>
+#include "sound.h"
+#include "boulder.h"
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -22,21 +23,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
 #include <math.h>
 
 static SkyCloudSystem* cloudSystem = NULL;
 static SkySystem skySystemInstance;
 
-GLuint grassTexture = 0;
 GLuint rockTexture = 0;
 GLuint sandTexture = 0;
 GLuint boulderTexture = 0;
 GLuint barkTexture = 0;
 GLuint leafTexture = 0;
 int terrainShader = 0;
-int skyShader = 0;
 
 static int th = 45;
 static int ph = 10;
@@ -48,21 +45,17 @@ static float dayTime = 0.0f;
 static float windStrength = 0.0f;
 
 float waterLevel = -4.0f;
-static float waterSpeed = 1.0f;
 static float waterTime = 0.0f;
 static int animateWater = 1;
 
 static int wireframe = 0;
 static int showAxes = 0;
-static int animateLight = 1;
-static float lightSpeed = 1.0f; 
 
 Landscape* landscape = NULL;
 
 static float lastTime = 0;
 static float deltaTime = 0;
 
-float fogDensity = 0.005f;
 int fogEnabled = 0;
 
 static int animateTime = 1;
@@ -88,6 +81,21 @@ float treeSwayAngle = 0.0f;
 
 static int snowOn = 0;
 
+static int ambientSoundOn = 1;
+
+#define DIM_MIN 30.0f
+#define DIM_MAX 300.0f
+
+void clampAndSyncDim() {
+    if (dim < DIM_MIN) dim = DIM_MIN;
+    if (dim > DIM_MAX) dim = DIM_MAX;
+    if (camera) {
+        if (camera->orbitDistance < DIM_MIN) camera->orbitDistance = DIM_MIN;
+        if (camera->orbitDistance > DIM_MAX) camera->orbitDistance = DIM_MAX;
+        dim = camera->orbitDistance = (dim + camera->orbitDistance) * 0.5f;
+    }
+}
+
 void reshape(int width, int height);
 void display();
 void special(int key, int x, int y);
@@ -108,10 +116,6 @@ void updateDeltaTime() {
     float currentTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentTime - lastTime;
     lastTime = currentTime;
-}
-
-float getNormalizedDayTime(float time) {
-    return time / 24.0f;
 }
 
 float smoothstep(float edge0, float edge1, float x) {
@@ -154,96 +158,6 @@ void getSkyColor(float time, float* color) {
             color[j] = color[j] * nightBlend + nightColor[j] * (1.0f - nightBlend);
         }
     }
-}
-
-void updateDayCycle() {
-    dayTime += deltaTime * 0.1f;  
-    if (dayTime >= 24.0f) dayTime = 0.0f;
-    float timeNormalized = dayTime / 24.0f;
-    float sunHeight = sin(timeNormalized * 2 * M_PI);
-    float ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
-    float diffuse[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    if (sunHeight > 0) {
-        float intensity = 0.6f + sunHeight * 0.4f; 
-        ambient[0] = 0.3f + sunHeight * 0.1f;
-        ambient[1] = 0.3f + sunHeight * 0.1f;
-        ambient[2] = 0.3f + sunHeight * 0.1f;
-        diffuse[0] = intensity * 1.0f;
-        diffuse[1] = intensity * 0.95f;
-        diffuse[2] = intensity * 0.8f;
-    } else {
-        float intensity = 0.3f; 
-        ambient[0] = intensity * 0.2f;
-        ambient[1] = intensity * 0.2f;
-        ambient[2] = intensity * 0.3f;
-        diffuse[0] = intensity * 0.6f;
-        diffuse[1] = intensity * 0.6f;
-        diffuse[2] = intensity * 0.8f;
-    }
-    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-}
-
-void updateDynamicLighting(float dayTime) {
-    float timeNormalized = dayTime / 24.0f;
-    float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
-    float sunHeight = sin(sunAngle);
-    float sunX = 500 * cos(sunAngle);
-    float sunY = lightHeight * sunHeight;
-    float sunZ = 0;
-    float moonX = 500 * cos(sunAngle + M_PI);
-    float moonY = lightHeight * (-sunHeight);
-    float moonZ = 0;
-    float lightPos[4];
-    float ambient[4];
-    float diffuse[4];
-    float specular[4];
-    if (sunHeight > 0) {
-        lightPos[0] = sunX;
-        lightPos[1] = sunY;
-        lightPos[2] = sunZ;
-        lightPos[3] = 0.0f;
-        float intensity = 0.5f + sunHeight * 0.5f;
-        ambient[0] = 0.15f + sunHeight * 0.15f;
-        ambient[1] = 0.15f + sunHeight * 0.15f;
-        ambient[2] = 0.15f + sunHeight * 0.15f;
-        ambient[3] = 1.0f;
-        diffuse[0] = intensity * 1.0f;
-        diffuse[1] = intensity * 0.95f;
-        diffuse[2] = intensity * 0.85f;
-        diffuse[3] = 1.0f;
-        specular[0] = intensity * 0.7f;
-        specular[1] = intensity * 0.7f;
-        specular[2] = intensity * 0.6f;
-        specular[3] = 1.0f;
-    }
-    else {
-        lightPos[0] = moonX;
-        lightPos[1] = moonY;
-        lightPos[2] = moonZ;
-        lightPos[3] = 0.0f; 
-        float moonIntensity = 0.15f + (-sunHeight) * 0.1f;
-        ambient[0] = 0.02f;
-        ambient[1] = 0.02f;
-        ambient[2] = 0.04f;
-        ambient[3] = 1.0f;
-        diffuse[0] = moonIntensity * 0.7f;
-        diffuse[1] = moonIntensity * 0.7f;
-        diffuse[2] = moonIntensity * 0.9f;
-        diffuse[3] = 1.0f;
-        specular[0] = moonIntensity * 0.3f;
-        specular[1] = moonIntensity * 0.3f;
-        specular[2] = moonIntensity * 0.4f;
-        specular[3] = 1.0f;
-    }
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
-    float matSpecular[] = {0.3f, 0.3f, 0.3f, 1.0f};
-    float matShininess = sunHeight > 0 ? 30.0f : 15.0f;
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matShininess);
 }
 
 void updateTreeAnimation() {
@@ -321,20 +235,12 @@ void display() {
               camera->upVec[0], camera->upVec[1], camera->upVec[2]);
     skySystemRenderSunAndMoon(&skySystemInstance, dayTime);
     updateFog(dayTime);
-    updateDynamicLighting(dayTime);
-    // --- Render clouds first, with depth offset and no depth writes ---
     if (cloudSystem) {
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(1.0f, 100.0f);
         glDepthMask(GL_FALSE);
         skyCloudSystemRender(cloudSystem, dayTime);
         glDepthMask(GL_TRUE);
-        glDisable(GL_POLYGON_OFFSET_FILL);
     }
-    // --- Now render the rest of the scene ---
     landscapeRender(landscape, 0);
-    // Render animated grass after terrain, before trees/objects
-    // Compute sun direction and ambient for grass shader
     float timeNormalized = dayTime / 24.0f;
     float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
     float sunHeight = sin(sunAngle);
@@ -384,23 +290,20 @@ void display() {
           (int)dayTime, (int)((dayTime-(int)dayTime)*60));
     int y = 5;
     glWindowPos2i(5, y);
-    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s  Snow: %s",
+    Print("Angle=%d,%d  Dim=%.1f  View=%s   |   Water=%.1f   |   Wireframe=%d   |   Axes=%d   |   TimeAnim: %s  Speed: %.1fx   |   Fog: %s  Snow: %s  |   Sound: %s",
         th, ph, dim, camera->mode == CAMERA_MODE_FREE_ORBIT ? "Free Orbit" : "First Person",
         waterLevel,
         wireframe,
         showAxes,
         animateTime ? "On" : "Off", timeSpeed,
         fogEnabled ? "On" : "Off",
-        snowOn ? "On" : "Off");
+        snowOn ? "On" : "Off",
+        ambientSoundOn ? "On" : "Off");
     glEnable(GL_DEPTH_TEST);
     if (snowOn) {
         particleSystemRender();
     }
     glutSwapBuffers();
-}
-
-void initSkyBackground() {
-    skyShader = loadShader("shaders/sky_shader.vert", "shaders/sky_shader.frag");
 }
 
 void mouse(int button, int state, int x, int y) {
@@ -415,11 +318,13 @@ void mouse(int button, int state, int x, int y) {
         if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
             dim = dim * 0.9;
             camera->orbitDistance *= 0.9;
+            clampAndSyncDim();
         }
     } else if (button == 4) {
         if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
             dim = dim * 1.1;
             camera->orbitDistance *= 1.1;
+            clampAndSyncDim();
         }
     }
     glutPostRedisplay();
@@ -434,16 +339,11 @@ void mouseMotion(int x, int y) {
             ph += dy;
             camera->orbitYaw += dx;
             camera->orbitPitch += dy;
-            if (ph > 89) ph = 89;
-            if (ph < -89) ph = -89;
-            if (camera->orbitPitch > 89) camera->orbitPitch = 89;
-            if (camera->orbitPitch < -89) camera->orbitPitch = -89;
         }
         else if (mouseButtons & 4) {
             dim *= (1 + dy/100.0);
             camera->orbitDistance *= (1 + dy/100.0);
-            if (dim < 1) dim = 1;
-            if (camera->orbitDistance < 1) camera->orbitDistance = 1;
+            clampAndSyncDim();
         }
     } else {
         if (mouseButtons & 1) {
@@ -468,28 +368,22 @@ void special(int key, int x, int y) {
                 camera->orbitYaw = th;
                 break;
             case GLUT_KEY_UP:
-                if (ph < 89) {
-                    ph += 5;
-                    if (ph < 10) ph = 10;
-                    camera->orbitPitch = ph; 
-                }
+                ph += 5;
+                camera->orbitPitch = ph; 
                 break;
             case GLUT_KEY_DOWN:
-                if (ph > -89) {
-                    ph -= 5;
-                    if (ph < 10) ph = 10;
-                    camera->orbitPitch = ph;
-                }
+                ph -= 5;
+                camera->orbitPitch = ph;
                 break;
             case GLUT_KEY_PAGE_DOWN:
                 dim += 0.1;
                 camera->orbitDistance = dim;
+                clampAndSyncDim();
                 break;
             case GLUT_KEY_PAGE_UP:
-                if (dim > 1) {
-                    dim -= 0.1;
-                    camera->orbitDistance = dim;
-                }
+                dim -= 0.1;
+                camera->orbitDistance = dim;
+                clampAndSyncDim();
                 break;
         }
         th %= 360;
@@ -539,7 +433,7 @@ void keyboard(unsigned char key, int x, int y) {
             lastOrbitPitch = INIT_ORBIT_PITCH;
             lastOrbitDistance = INIT_ORBIT_DISTANCE;
             lastOrbitTh = INIT_ORBIT_TH;
-            lastOrbitPh = INIT_ORBIT_PH < 10 ? 10 : INIT_ORBIT_PH;
+            lastOrbitPh = INIT_ORBIT_PH;
             lastOrbitDim = INIT_ORBIT_DIM;
             lastFPPos[0] = INIT_FP_POS[0];
             lastFPPos[1] = INIT_FP_POS[1];
@@ -547,16 +441,15 @@ void keyboard(unsigned char key, int x, int y) {
             lastFPYaw = INIT_FP_YAW;
             lastFPPitch = INIT_FP_PITCH;
             th = INIT_ORBIT_TH;
-            ph = INIT_ORBIT_PH < 10 ? 10 : INIT_ORBIT_PH;
+            ph = INIT_ORBIT_PH;
             dim = INIT_ORBIT_DIM;
+            camera->orbitYaw = th;
+            camera->orbitPitch = ph;
+            camera->orbitDistance = dim;
+            clampAndSyncDim();
             waterLevel = -4.0f;
             lightHeight = 250.0f;
-            waterSpeed = 1.0f;
-            lightSpeed = 1.0f;
             fov = 1;
-            camera->orbitYaw = lastOrbitYaw;
-            camera->orbitPitch = lastOrbitPitch;
-            camera->orbitDistance = lastOrbitDistance;
             viewCameraSetMode(camera, CAMERA_MODE_FREE_ORBIT);
             viewCameraUpdateVectors(camera);
             break;
@@ -565,10 +458,10 @@ void keyboard(unsigned char key, int x, int y) {
             lastOrbitPitch = camera->orbitPitch;
             lastOrbitDistance = camera->orbitDistance;
             lastOrbitTh = th;
-            lastOrbitPh = ph < 10 ? 10 : ph;
+            lastOrbitPh = ph;
             lastOrbitDim = dim;
             camera->fpYaw = lastFPYaw;
-            camera->fpPitch = lastFPPitch < 5.0f ? 10.0f : lastFPPitch;
+            camera->fpPitch = lastFPPitch;
             camera->fpPosition[0] = lastFPPos[0];
             camera->fpPosition[2] = lastFPPos[2];
             float groundHeight = landscapeGetHeight(landscape, camera->fpPosition[0], camera->fpPosition[2]);
@@ -588,8 +481,9 @@ void keyboard(unsigned char key, int x, int y) {
             camera->orbitPitch = lastOrbitPitch;
             camera->orbitDistance = lastOrbitDistance;
             th = lastOrbitTh;
-            ph = lastOrbitPh < 10 ? 10 : lastOrbitPh;
+            ph = lastOrbitPh;
             dim = lastOrbitDim;
+            clampAndSyncDim();
             viewCameraSetMode(camera, CAMERA_MODE_FREE_ORBIT);
             viewCameraUpdateVectors(camera);
             break;
@@ -610,9 +504,8 @@ void keyboard(unsigned char key, int x, int y) {
         case 'z':
             if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
                 dim -= 5.0f;
-                if (dim < 1.0f) dim = 1.0f;
                 camera->orbitDistance -= 5.0f;
-                if (camera->orbitDistance < 1.0f) camera->orbitDistance = 1.0f;
+                clampAndSyncDim();
                 viewCameraUpdateVectors(camera);
                 Project(fov?55:0, asp, dim);
             }
@@ -621,6 +514,7 @@ void keyboard(unsigned char key, int x, int y) {
             if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
                 dim += 5.0f;
                 camera->orbitDistance += 5.0f;
+                clampAndSyncDim();
                 viewCameraUpdateVectors(camera);
                 Project(fov?55:0, asp, dim);
             }
@@ -628,6 +522,14 @@ void keyboard(unsigned char key, int x, int y) {
         case 'n':
             snowOn = !snowOn;
             particleSystemSetEnabled(snowOn);
+            break;
+        case 'm':
+            ambientSoundOn = !ambientSoundOn;
+            if (ambientSoundOn) {
+                soundSystemPlayAmbience();
+            } else {
+                soundSystemStopAmbience();
+            }
             break;
     }
     glutPostRedisplay();
@@ -639,9 +541,6 @@ void idle() {
         if (dayTime >= 24.0f) dayTime = 0.0f;
     }
     updateDeltaTime();
-    if (animateLight) {
-        updateDayCycle();
-    }
     viewCameraUpdate(camera, deltaTime);
     updateTreeAnimation();
     if (animateWater) {
@@ -669,7 +568,6 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Failed to create landscape\n");
         return 1;
     }
-    // Initialize animated grass system
     grassSystemInit(landscape, LANDSCAPE_SCALE, 500000);
     particleSystemUploadHeightmap(landscape->elevationData);
     initLandscapeObjects(landscape);
@@ -684,7 +582,7 @@ int main(int argc, char* argv[]) {
     lastOrbitPitch = INIT_ORBIT_PITCH;
     lastOrbitDistance = INIT_ORBIT_DISTANCE;
     lastOrbitTh = INIT_ORBIT_TH;
-    lastOrbitPh = INIT_ORBIT_PH < 10 ? 10 : INIT_ORBIT_PH;
+    lastOrbitPh = INIT_ORBIT_PH;
     lastOrbitDim = INIT_ORBIT_DIM;
     lastFPPos[0] = INIT_FP_POS[0];
     lastFPPos[2] = INIT_FP_POS[2];
@@ -711,15 +609,6 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Failed to load terrain shaders\n");
         return 1;
     }
-    skyShader = loadShader("shaders/sky_shader.vert", "shaders/sky_shader.frag");
-    if (!skyShader) {
-        fprintf(stderr, "Failed to load sky shaders\n");
-        return 1;
-    }
-    if (!(grassTexture = LoadTexBMP("tex/grassland.bmp"))) {
-        fprintf(stderr, "Failed to load grass texture\n");
-        return 1;
-    }
     if (!(rockTexture = LoadTexBMP("tex/rocky.bmp"))) {
         fprintf(stderr, "Failed to load rock texture\n");
         return 1;
@@ -741,7 +630,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    // Initialize fractal tree shaders
     fractalTreeInit();
     boulderShaderInit();
     
@@ -755,6 +643,12 @@ int main(int argc, char* argv[]) {
     lastTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     
     particleSystemInit(2000.0f, 20000.0f);
+    
+    if (!soundSystemInit()) {
+        fprintf(stderr, "Failed to initialize sound system.\n");
+    } else {
+        soundSystemPlayAmbience();
+    }
     
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
@@ -771,11 +665,11 @@ int main(int argc, char* argv[]) {
     freeBoulders();
     freeLandscapeObjects();
     skyCloudSystemDestroy(cloudSystem);
+    skySystemDestroy(&skySystemInstance);
     deleteShader(terrainShader);
-    deleteShader(skyShader);
     viewCameraDestroy(camera);
     particleSystemCleanup();
-    // Cleanup grass system
     grassSystemCleanup();
+    soundSystemCleanup();
     return 0;
 }

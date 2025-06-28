@@ -13,10 +13,9 @@ void main() {
     vec3 N = normalize(Normal);
     vec3 L = normalize(lightPos - WorldPos);
     float intensity = max(dot(N, L), 0.0) * 0.8 + 0.2;
-    // Brown gradient: base is dark, top is lighter
     vec3 color = mix(vec3(0.35, 0.18, 0.05), vec3(0.7, 0.45, 0.18), clamp(Height, 0.0, 1.0));
     vec3 barkColor = texture2D(barkTex, TexCoord).rgb;
-    color = mix(color, barkColor, 0.5); // Blend with bark texture
+    color = mix(color, barkColor, 0.5);
     vec3 ambient = vec3(0.10, 0.10, 0.10);
     gl_FragColor = vec4(ambient + intensity * color * lightColor, 1.0);
 } 

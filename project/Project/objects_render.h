@@ -24,30 +24,10 @@ typedef struct {
     int leafColorIndex; // Per-tree leaf color
 } TreeInstance;
 
-// --- Boulder System ---
-typedef struct {
-    float x, y, z;
-    float scale;
-    float rotation;
-    unsigned int shapeSeed;
-    int colorIndex; // Per-boulder color
-} BoulderInstance;
-
-// Render all procedural objects (trees, rocks, etc.) on the landscape
 void renderLandscapeObjects(Landscape* landscape);
-
 void initLandscapeObjects(Landscape* landscape);
 void freeLandscapeObjects();
 
-void renderBoulders(Landscape* landscape);
-void initBoulders(Landscape* landscape);
-void freeBoulders();
-
-void boulderShaderInit();
-
-void boulderDraw(float x, float y, float z, float scale, float rotation, unsigned int shapeSeed, int colorIndex);
-
-// Expose treeInstances and numTrees for collision checks in boulder.c
 extern TreeInstance* treeInstances;
 extern int numTrees;
 

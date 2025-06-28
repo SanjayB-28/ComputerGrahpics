@@ -1,9 +1,5 @@
 #include "CSCIx229.h"
 #include "shaders.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
 
 static char* readText(const char* file)
 {

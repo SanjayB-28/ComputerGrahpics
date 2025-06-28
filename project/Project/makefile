@@ -11,12 +11,12 @@ else
 # macOS
 ifeq "$(shell uname)" "Darwin"
 RES=$(shell uname -r|sed -E 's/(.).*/\1/'|tr 12 21)  
-CFLG=-O3 -Wall -Wno-deprecated-declarations -DGL_SILENCE_DEPRECATION -DRES=$(RES)  
-LIBS=-framework GLUT -framework OpenGL     
+CFLG=-O3 -Wall -Wno-deprecated-declarations -DRES=$(RES) -I/opt/homebrew/opt/sdl2/include/SDL2 -I/opt/homebrew/opt/sdl2_mixer/include/SDL2
+LIBS=-framework GLUT -framework OpenGL -L/opt/homebrew/opt/sdl2/lib -L/opt/homebrew/opt/sdl2_mixer/lib -lSDL2 -lSDL2_mixer
 # Linux/Unix
 else
 CFLG=-O3 -Wall                   
-LIBS=-lglut -lGLU -lGL -lm       
+LIBS=-lglut -lGLU -lGL -lm -lSDL2 -lSDL2_mixer
 endif
 CLEAN=rm -f $(EXE) *.o *.a
 endif
@@ -45,6 +45,9 @@ objects_render.o: objects_render.c objects_render.h landscape.h fractal_tree.h
 particles.o: particles.c particles.h
 	gcc -c $(CFLG) particles.c
 
+sound.o: sound.c sound.h
+	gcc -c $(CFLG) sound.c
+
 CSCIx229.a: fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o
 	ar -rcs $@ $^
 
@@ -53,13 +56,16 @@ CSCIx229.a: fatal.o errcheck.o print.o loadtexbmp.o loadobj.o projection.o
 .cpp.o:
 	g++ -c $(CFLG) $<
 
-OBJS = main.o landscape.o shaders.o sky.o sky_clouds.o camera.o fractal_tree.o objects_render.o particles.o boulder.o grass.o
+OBJS = main.o landscape.o shaders.o sky.o sky_clouds.o camera.o fractal_tree.o objects_render.o particles.o boulder.o grass.o sound.o
 
 final: $(OBJS) CSCIx229.a
 	$(CC) $(CFLAGS) -o final $(OBJS) CSCIx229.a $(LIBS)
 
 grass.o: grass.c grass.h
 	$(CC) $(CFLAGS) -c grass.c
+
+boulder.o: boulder.c boulder.h
+	$(CC) $(CFLG) -c boulder.c
 
 clean:
 	$(CLEAN)

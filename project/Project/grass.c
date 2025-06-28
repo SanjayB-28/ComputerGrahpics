@@ -1,27 +1,19 @@
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #endif
+#include "CSCIx229.h"
 #include "grass.h"
-#include <stdlib.h>
-#include <math.h>
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <GLUT/glut.h>
-#else
-#include <GL/gl.h>
-#include <GL/glut.h>
-#endif
+#include "shaders.h"
 
-// Each blade is a quad (2 triangles, 6 vertices)
 typedef struct {
-    float x, y, z;      // base position
-    float swaySeed;     // random per-blade
-    float offsetX;      // -width/2 or +width/2
-    float offsetY;      // 0 or height
-    float bladeHeight;  // per-blade height
-    float bladeWidth;   // per-blade width
-    float colorVar;     // per-blade color variation
-    float rotation;     // per-blade Y rotation (radians)
+    float x, y, z;      
+    float swaySeed;     
+    float offsetX;      
+    float offsetY;      
+    float bladeHeight;  
+    float bladeWidth;   
+    float colorVar;     
+    float rotation;     
 } GrassVertex;
 
 static GLuint grassVBO = 0, grassVAO = 0;
@@ -29,7 +21,8 @@ static GLuint grassShader = 0;
 static GLuint grassTex = 0;
 static int grassCount = 0;
 
-// Helper for random float in [a, b]
+extern float waterLevel;
+
 static float randf(float a, float b) {
     return a + ((float)rand() / RAND_MAX) * (b - a);
 }
@@ -43,7 +36,6 @@ void grassSystemInit(Landscape* landscape, float areaSize, int numBlades) {
         float x = randf(-halfScale, halfScale);
         float z = randf(-halfScale, halfScale);
         float y = landscapeGetHeight(landscape, x, z);
-        // Compute slope using landscape normal
         float nx = (x / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
         float nz = (z / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
         int ix = (int)nx;
@@ -54,9 +46,8 @@ void grassSystemInit(Landscape* landscape, float areaSize, int numBlades) {
         if (iz >= LANDSCAPE_SIZE-1) iz = LANDSCAPE_SIZE-2;
         int normalIndex = iz * LANDSCAPE_SIZE + ix;
         float* normal = &landscape->normals[normalIndex * 3];
-        float slope = acosf(fminf(fmaxf(normal[1], -1.0f), 1.0f)); // angle from vertical
+        float slope = acosf(fminf(fmaxf(normal[1], -1.0f), 1.0f)); 
         float slopeDeg = slope * (180.0f / M_PI);
-        // Skip if under water or too steep
         if (y < waterLevel + 0.2f) continue;
         if (slopeDeg > 32.0f) continue;
         float swaySeed = randf(0.0f, 1.0f);
@@ -64,21 +55,17 @@ void grassSystemInit(Landscape* landscape, float areaSize, int numBlades) {
         float bladeWidth = randf(0.05f, 0.13f);
         float colorVar = randf(-0.08f, 0.08f);
         float rotation = randf(0.0f, 2.0f * (float)M_PI);
-        int colorIndex = rand() % 4; // 4 color palette options
-        // 6 vertices per blade (2 triangles)
+        int colorIndex = rand() % 4; 
         for (int v = 0; v < 6; ++v) {
             GrassVertex vert = {x, y, z, swaySeed, 0, 0, bladeHeight, bladeWidth, colorVar, rotation};
             switch (v) {
-                case 0: vert.offsetX = -bladeWidth/2; vert.offsetY = 0; break; // bottom left
-                case 1: vert.offsetX = -bladeWidth/2; vert.offsetY = bladeHeight; break; // top left
-                case 2: vert.offsetX = bladeWidth/2; vert.offsetY = bladeHeight; break; // top right
-                case 3: vert.offsetX = -bladeWidth/2; vert.offsetY = 0; break; // bottom left
-                case 4: vert.offsetX = bladeWidth/2; vert.offsetY = bladeHeight; break; // top right
-                case 5: vert.offsetX = bladeWidth/2; vert.offsetY = 0; break; // bottom right
+                case 0: vert.offsetX = -bladeWidth/2; vert.offsetY = 0; break; 
+                case 1: vert.offsetX = -bladeWidth/2; vert.offsetY = bladeHeight; break; 
+                case 2: vert.offsetX = bladeWidth/2; vert.offsetY = bladeHeight; break; 
+                case 3: vert.offsetX = -bladeWidth/2; vert.offsetY = 0; break; 
+                case 4: vert.offsetX = bladeWidth/2; vert.offsetY = bladeHeight; break; 
+                case 5: vert.offsetX = bladeWidth/2; vert.offsetY = 0; break; 
             }
-            // Color: make left half darker, right half lighter, and add colorVar
-            // We'll pass colorVar to the shader for per-blade color variation
-            // (actual color logic will be in the shader)
             vert.colorVar += colorIndex * 0.25f;
             data[i*6+v] = vert;
         }
@@ -94,10 +81,7 @@ void grassSystemInit(Landscape* landscape, float areaSize, int numBlades) {
     glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GrassVertex) * 6 * numBlades, data, GL_STATIC_DRAW);
     free(data);
-    extern int loadShader(const char*, const char*);
     grassShader = loadShader("shaders/grass.vert", "shaders/grass.frag");
-    // Load grass texture
-    extern int LoadTexBMP(const char* file);
     grassTex = LoadTexBMP("tex/leaf.bmp");
 }
 
@@ -112,7 +96,6 @@ void grassSystemRender(float time, float windStrength, const float sunDir[3], co
     GLint ambientLoc = glGetUniformLocation(grassShader, "ambient");
     glUniform3fv(sunDirLoc, 1, sunDir);
     glUniform3fv(ambientLoc, 1, ambient);
-    // Bind grass texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, grassTex);
     GLint texLoc = glGetUniformLocation(grassShader, "grassTex");

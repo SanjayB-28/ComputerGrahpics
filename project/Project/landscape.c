@@ -1,18 +1,5 @@
 #include "landscape.h"
 #include "CSCIx229.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
-
 #include "shaders.h"
 
 #define NOISE_OFFSET_X 37.0f

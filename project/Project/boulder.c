@@ -1,20 +1,10 @@
+#include "boulder.h"
 #include "objects_render.h"
 #include "landscape.h"
 #include "shaders.h"
-#include <stdlib.h>
-#include <math.h>
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glut.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+#include "CSCIx229.h"
 
 #define NUM_BOULDERS 40
-#define BOULDER_DETAIL 3  // Subdivision level for icosahedron
 
 static BoulderInstance* boulders = NULL;
 static int numBoulders = 0;
@@ -23,8 +13,8 @@ static int boulderShader = 0;
 extern TreeInstance* treeInstances;
 extern int numTrees;
 extern GLuint boulderTexture;
+extern float waterLevel;
 
-// Helper: random float in [0,1]
 static float randf() { return rand() / (float)RAND_MAX; }
 
 void freeBoulders() {
@@ -48,7 +38,6 @@ void initBoulders(Landscape* landscape) {
         float z = -halfScale + randf() * LANDSCAPE_SCALE * 0.95f;
         float y = landscapeGetHeight(landscape, x, z);
         float slope = 0.0f;
-        // Only place boulders on relatively flat ground
         float nx = (x / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
         float nz = (z / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
         int ix = (int)nx;
@@ -61,8 +50,7 @@ void initBoulders(Landscape* landscape) {
         float* n = &landscape->normals[idx*3];
         slope = acosf(fminf(fmaxf(n[1], -1.0f), 1.0f)) / (float)M_PI;
         if (slope > 0.25f) continue;
-        if (y < waterLevel + 0.5f) continue; // Don't place in lakes
-        // Don't collide with trees
+        if (y < waterLevel + 0.5f) continue;
         int collides = 0;
         for (int t = 0; t < numTrees; ++t) {
             float dx = x - treeInstances[t].x;
@@ -83,9 +71,7 @@ void initBoulders(Landscape* landscape) {
     }
 }
 
-// Custom closed irregular boulder mesh (18 vertices, 32 faces)
 void boulderDraw(float x, float y, float z, float scale, float rotation, unsigned int shapeSeed, int colorIndex) {
-    // Base vertices for a closed, irregular rock
     float baseVerts[28][3] = {
         {0.0f, 1.0f, 0.0f}, {0.8f, 0.6f, 0.2f}, {0.5f, 0.5f, -0.9f}, {-0.7f, 0.7f, -0.6f},
         {-1.0f, 0.5f, 0.4f}, {0.0f, -0.1f, 1.1f}, {1.1f, -0.2f, -0.3f}, {0.4f, -0.8f, -1.0f},
@@ -101,7 +87,6 @@ void boulderDraw(float x, float y, float z, float scale, float rotation, unsigne
         {6,12,13},{6,13,7},{6,7,2},{6,2,12},{6,12,10},{6,10,15},{6,15,16},{6,16,7},{17,18,19},{17,19,20},{17,20,21},{17,21,18},
         {18,22,23},{18,23,19},{19,23,24},{19,24,20},{20,24,25},{20,25,21},{21,25,26},{21,26,18},{18,26,22},{22,26,25},{22,25,23},{23,25,24}
     };
-    // Perturb vertices for each boulder
     float verts[28][3];
     for (int i = 0; i < 28; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -120,15 +105,10 @@ void boulderDraw(float x, float y, float z, float scale, float rotation, unsigne
         GLint texLoc = glGetUniformLocation(boulderShader, "boulderTex");
         glUniform1i(texLoc, 0);
         glEnable(GL_TEXTURE_2D);
-        // Set up lighting uniforms for the boulder shader
         float lightPos[4], diffuse[4];
         glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
         glGetLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-        float len = sqrtf(lightPos[0]*lightPos[0] + lightPos[1]*lightPos[1] + lightPos[2]*lightPos[2]);
-        float lightDir[3] = {lightPos[0]/len, lightPos[1]/len, lightPos[2]/len};
-        GLint lightDirLoc = glGetUniformLocation(boulderShader, "lightDir");
         GLint lightColorLoc = glGetUniformLocation(boulderShader, "lightColor");
-        glUniform3fv(lightDirLoc, 1, lightDir);
         glUniform3fv(lightColorLoc, 1, diffuse);
         GLint colorIndexLoc = glGetUniformLocation(boulderShader, "boulderColorIndex");
         glUniform1i(colorIndexLoc, colorIndex);
@@ -140,7 +120,6 @@ void boulderDraw(float x, float y, float z, float scale, float rotation, unsigne
         float* v0 = verts[faces[f][0]];
         float* v1 = verts[faces[f][1]];
         float* v2 = verts[faces[f][2]];
-        // Compute normal
         float ux = v1[0] - v0[0], uy = v1[1] - v0[1], uz = v1[2] - v0[2];
         float vx = v2[0] - v0[0], vy = v2[1] - v0[1], vz = v2[2] - v0[2];
         float nx = uy * vz - uz * vy;
@@ -149,7 +128,6 @@ void boulderDraw(float x, float y, float z, float scale, float rotation, unsigne
         float len = sqrtf(nx*nx + ny*ny + nz*nz);
         if (len > 0.0001f) { nx /= len; ny /= len; nz /= len; }
         glNormal3f(nx, ny, nz);
-        // Planar mapping for texture coordinates
         glTexCoord2f(v0[0]*0.5f+0.5f, v0[2]*0.5f+0.5f);
         glVertex3fv(v0);
         glTexCoord2f(v1[0]*0.5f+0.5f, v1[2]*0.5f+0.5f);
@@ -163,7 +141,7 @@ void boulderDraw(float x, float y, float z, float scale, float rotation, unsigne
     glPopMatrix();
 }
 
-void renderBoulders(Landscape* landscape) {
+void renderBoulders() {
     for (int i = 0; i < numBoulders; ++i) {
         BoulderInstance* b = &boulders[i];
         boulderDraw(b->x, b->y, b->z, b->scale, b->rotation, b->shapeSeed, b->colorIndex);

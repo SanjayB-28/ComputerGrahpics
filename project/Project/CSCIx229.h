@@ -11,24 +11,14 @@
 #include <GL/glew.h>
 #endif
 #define GL_GLEXT_PROTOTYPES
-#if defined(SDL2)
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#elif defined(SDL)
-#include <SDL/SDL.h>
-#include <SDL/SDL_mixer.h>
-#elif defined(GLFW)
-#include <GLFW/glfw3.h>
-#elif defined(__APPLE__)
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
+
 #ifdef __APPLE__
+#include <GLUT/glut.h>
 #include <OpenGL/glu.h>
 #include <OpenGL/gl.h>
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #else
+#include <GL/glut.h>
 #include <GL/glu.h>
 #include <GL/gl.h>
 #endif

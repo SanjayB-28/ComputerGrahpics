@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LANDSCAPE_H
+#define LANDSCAPE_H
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -22,9 +23,11 @@ typedef struct {
     int indexCount;         
 } Landscape;
 
-extern GLuint grassTexture;
 extern GLuint rockTexture;
 extern GLuint sandTexture;
+extern GLuint boulderTexture;
+extern GLuint barkTexture;
+extern GLuint leafTexture;
 extern int terrainShader;
 
 Landscape* landscapeCreate();                  
@@ -40,3 +43,4 @@ float landscapeSmoothStep(float edge0, float edge1, float x);
 #define LANDSCAPE_SIZE 128       
 #define LANDSCAPE_SCALE 200.0f   
 #define LANDSCAPE_HEIGHT 50.0f   
+#endif

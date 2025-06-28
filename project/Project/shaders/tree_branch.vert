@@ -5,9 +5,6 @@ varying float Height;
 varying vec2 TexCoord;
 varying vec3 WorldPos;
 
-uniform vec3 lightDir;
-uniform vec3 lightColor;
-
 void main() {
     Normal = normalize(gl_NormalMatrix * gl_Normal);
     Height = gl_Vertex.y;

@@ -1,15 +1,6 @@
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <GLUT/glut.h>
-#include <OpenGL/glext.h>
-#else
-#include <GL/gl.h>
-#include <GL/glut.h>
-#endif
+#include "CSCIx229.h"
 #include "particles.h"
-#include <stdlib.h>
-#include <math.h>
-#include <stdio.h>
+#include "shaders.h"
 #include "landscape.h"
 
 static GLuint particleVBOs[2] = {0, 0};
@@ -28,7 +19,6 @@ static float terrainMinZ = -LANDSCAPE_SCALE * 0.5f;
 static float terrainMaxZ = LANDSCAPE_SCALE * 0.5f;
 
 void particleSystemInit(float terrainScale, float terrainHeight) {
-    extern int loadShader(const char*, const char*);
     updateShader = loadShader("shaders/particle_update.vert", NULL);
     glBindAttribLocation(updateShader, 0, "pos");
     glBindAttribLocation(updateShader, 1, "vel");
@@ -54,15 +44,15 @@ void particleSystemInit(float terrainScale, float terrainHeight) {
         float x = terrainMinX + ((float)rand() / RAND_MAX) * (terrainMaxX - terrainMinX);
         float z = terrainMinZ + ((float)rand() / RAND_MAX) * (terrainMaxZ - terrainMinZ);
         float y = cloudHeight;
-        float vy = -5.0f - ((float)rand() / RAND_MAX) * 10.0f; // random between -5 and -15
+        float vy = -5.0f - ((float)rand() / RAND_MAX) * 10.0f;
         initData[i*8 + 0] = x;
         initData[i*8 + 1] = y;
         initData[i*8 + 2] = z;
-        initData[i*8 + 3] = 0.0f; // vx
-        initData[i*8 + 4] = vy;   // vy
-        initData[i*8 + 5] = 0.0f; // vz
-        initData[i*8 + 6] = 0.0f; // restTime
-        initData[i*8 + 7] = 0.0f; // state
+        initData[i*8 + 3] = 0.0f;
+        initData[i*8 + 4] = vy;
+        initData[i*8 + 5] = 0.0f;
+        initData[i*8 + 6] = 0.0f;
+        initData[i*8 + 7] = 0.0f;
     }
     for (int b = 0; b < 2; ++b) {
 #ifdef __APPLE__
@@ -72,13 +62,13 @@ void particleSystemInit(float terrainScale, float terrainHeight) {
 #endif
         glBindBuffer(GL_ARRAY_BUFFER, particleVBOs[b]);
         glBufferData(GL_ARRAY_BUFFER, numParticles * 8 * sizeof(float), initData, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(0); // pos
+        glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1); // vel
+        glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(2); // restTime
+        glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-        glEnableVertexAttribArray(3); // state
+        glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(7 * sizeof(float)));
     }
 #ifdef __APPLE__
@@ -101,7 +91,7 @@ void particleSystemUpdate(float dt) {
     GLint cloudHeightLoc = glGetUniformLocation(updateShader, "cloudHeight");
     glUniform1f(cloudHeightLoc, cloudHeight);
     GLint restThresholdLoc = glGetUniformLocation(updateShader, "restThreshold");
-    glUniform1f(restThresholdLoc, 5.0f); // 2 seconds
+    glUniform1f(restThresholdLoc, 5.0f);
     GLint landscapeScaleLoc = glGetUniformLocation(updateShader, "landscapeScale");
     glUniform1f(landscapeScaleLoc, LANDSCAPE_SCALE);
     GLint landscapeSizeLoc = glGetUniformLocation(updateShader, "landscapeSize");
@@ -114,13 +104,11 @@ void particleSystemUpdate(float dt) {
     glUniform1f(terrainMinZLoc, terrainMinZ);
     GLint terrainMaxZLoc = glGetUniformLocation(updateShader, "terrainMaxZ");
     glUniform1f(terrainMaxZLoc, terrainMaxZ);
-    // Bind heightmap texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, heightmapTex);
     GLint heightmapLoc = glGetUniformLocation(updateShader, "heightmap");
     glUniform1i(heightmapLoc, 0);
-    // Set wind uniform
-    float windX = 8.0f * sinf(time * 0.3f); // much stronger wind
+    float windX = 8.0f * sinf(time * 0.3f);
     float windZ = 3.0f * cosf(time * 0.2f);
     GLint windLoc = glGetUniformLocation(updateShader, "wind");
     glUniform2f(windLoc, windX, windZ);
@@ -158,11 +146,6 @@ void particleSystemUpdate(float dt) {
     glUseProgram(0);
     err = glGetError();
     if (err != GL_NO_ERROR) printf("OpenGL error after transform feedback: %d\n", err);
-    // Print the updated particle position and velocity (optional, can be commented out for performance)
-    // float data[8];
-    // glBindBuffer(GL_ARRAY_BUFFER, particleVBOs[dst]);
-    // glGetBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(data), data);
-    // printf("Particle position: %f %f %f, velocity: %f %f %f, restTime: %f, state: %f (time: %f)\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], time);
     curSrc = dst;
 }
 
@@ -199,7 +182,8 @@ void particleSystemCleanup() {
     glDeleteBuffers(2, particleVBOs);
 }
 
-void particleSystemSetEnabled(int enabled) { /* No-op for minimal test */ }
+void particleSystemSetEnabled(int enabled) {
+}
 
 void particleSystemUploadHeightmap(float* elevationData) {
     if (!heightmapTex) {

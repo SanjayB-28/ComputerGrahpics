@@ -1,30 +1,14 @@
 #include "camera.h"
 #include "landscape.h"
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glut.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+#include "CSCIx229.h"
 
 extern Landscape* landscape;
 
 #define PI 3.14159265359f
 #define DEG2RAD (PI/180.0f)
 #define MIN_DISTANCE 1.0f
-#define MAX_DISTANCE 300.0f
 #define EYE_HEIGHT 2.0f
 #define CAMERA_SPEED 20.0f
-#define MIN_ZOOM 5.0f
-#define MAX_ZOOM 1000.0f
-#define ZOOM_SPEED 0.1f
 
 static void constrainToTerrain(ViewCamera* cam);
 
@@ -32,13 +16,11 @@ ViewCamera* viewCameraCreate(void) {
     ViewCamera* cam = (ViewCamera*)malloc(sizeof(ViewCamera));
     if (!cam) return NULL;
     cam->mode = CAMERA_MODE_FREE_ORBIT;
-    // First-person defaults
     cam->fpPosition[0] = 0.0f;
     cam->fpPosition[1] = 2.0f;
     cam->fpPosition[2] = 0.0f;
     cam->fpYaw = 45.0f;
     cam->fpPitch = 10.0f;
-    // Orbit defaults
     cam->orbitYaw = 45.0f;
     cam->orbitPitch = 10.0f;
     cam->orbitDistance = LANDSCAPE_SCALE * 0.8f;
@@ -157,27 +139,10 @@ void viewCameraRotate(ViewCamera* cam, float deltaX, float deltaY) {
     if (cam->mode == CAMERA_MODE_FREE_ORBIT) {
         cam->orbitYaw += deltaX * 0.4f;
         cam->orbitPitch += deltaY * 0.4f;
-        if (cam->orbitPitch > 89.0f) cam->orbitPitch = 89.0f;
-        if (cam->orbitPitch < -89.0f) cam->orbitPitch = -89.0f;
-        if (cam->orbitYaw >= 360.0f) cam->orbitYaw -= 360.0f;
-        if (cam->orbitYaw < 0.0f) cam->orbitYaw += 360.0f;
     } else {
         cam->fpYaw += deltaX * 0.2f;
         cam->fpPitch += deltaY * 0.2f;
-        if (cam->fpPitch > 89.0f) cam->fpPitch = 89.0f;
-        if (cam->fpPitch < -89.0f) cam->fpPitch = -89.0f;
-        if (cam->fpYaw >= 360.0f) cam->fpYaw -= 360.0f;
-        if (cam->fpYaw < 0.0f) cam->fpYaw += 360.0f;
     }
-    viewCameraUpdateVectors(cam);
-}
-
-void viewCameraZoom(ViewCamera* cam, float factor) {
-    if (!cam || cam->mode != CAMERA_MODE_FREE_ORBIT) return;
-    float zoomAmount = (factor - 1.0f) * cam->orbitDistance * ZOOM_SPEED;
-    cam->orbitDistance += zoomAmount;
-    if (cam->orbitDistance < MIN_ZOOM) cam->orbitDistance = MIN_ZOOM;
-    if (cam->orbitDistance > LANDSCAPE_SCALE * 2.0f) cam->orbitDistance = LANDSCAPE_SCALE * 2.0f;
     viewCameraUpdateVectors(cam);
 }
 
@@ -203,14 +168,6 @@ static void constrainToTerrain(ViewCamera* cam) {
         cam->fpPosition[0] = fmax(-halfScale, fmin(halfScale, cam->fpPosition[0]));
         cam->fpPosition[2] = fmax(-halfScale, fmin(halfScale, cam->fpPosition[2]));
     }
-}
-
-void viewCameraReset(ViewCamera* cam) {
-    if (!cam) return;
-    cam->orbitYaw = -60.0f;
-    cam->orbitPitch = 30.0f;
-    cam->orbitDistance = LANDSCAPE_SCALE * 0.8f;
-    viewCameraSetMode(cam, CAMERA_MODE_FREE_ORBIT);
 }
 
 void viewCameraDestroy(ViewCamera* cam) {

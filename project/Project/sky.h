@@ -1,5 +1,5 @@
-#ifndef CELESTIAL_H
-#define CELESTIAL_H
+#ifndef SKY_H
+#define SKY_H
 
 typedef struct {
     float position[3];           

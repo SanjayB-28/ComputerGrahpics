@@ -8,7 +8,6 @@ attribute float state;
 uniform float dt;
 uniform float time;
 uniform float cloudHeight;
-uniform float restThreshold;
 uniform sampler2D heightmap;
 uniform float landscapeScale;
 uniform float landscapeSize;
@@ -47,7 +46,7 @@ void main() {
     float swayZ = cos(pos.z * 0.18 + time * 1.1 + pos.x * 0.13 + hash2(swaySeed, 3.0) * 6.28) * (2.0 + 2.0 * hash2(swaySeed, 4.0));
     vec3 windVel = vec3(wind.x + swayX, 0.0, wind.y + swayZ);
 
-    if (state < 0.5) { // Falling
+    if (state < 0.5) {
         newVel = windVel + vec3(0.0, vel.y, 0.0);
         newPos = pos + newVel * dt;
         float margin = 1.0;
@@ -57,13 +56,13 @@ void main() {
             newPos.y = terrainY;
             newVel = vec3(0.0);
             newRestTime = 0.0;
-            newState = 1.0; // Resting
+            newState = 1.0;
         }
-    } else { // Resting
+    } else {
         newRestTime = restTime + dt;
         newVel = vec3(0.0);
         float margin = 1.0;
-        if (newRestTime > 2.0) { // respawn every 2 seconds
+        if (newRestTime > 2.0) {
             float seed = time + pos.x + pos.z + restTime + state * 31.0;
             float rx = clamp(mix(terrainMinX + margin, terrainMaxX - margin, hash2(seed, 1.0)), terrainMinX, terrainMaxX);
             float rz = clamp(mix(terrainMinZ + margin, terrainMaxZ - margin, hash2(seed, 2.0)), terrainMinZ, terrainMaxZ);
@@ -71,7 +70,7 @@ void main() {
             newPos = vec3(rx, cloudHeight, rz);
             newVel = vec3(0.0, rv, 0.0);
             newRestTime = 0.0;
-            newState = 0.0; // Falling
+            newState = 0.0;
         }
     }
 

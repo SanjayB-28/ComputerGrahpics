@@ -1,19 +1,7 @@
 #include "sky.h"
 #include "landscape.h"
-#include <math.h>
-#include <stdlib.h>
+#include "CSCIx229.h"
 
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glut.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
-
-static SkySystem* globalSky = NULL;
 static GLUquadric* quadric = NULL;
 
 void skySystemInit(SkySystem* sky) {
@@ -29,7 +17,6 @@ void skySystemInit(SkySystem* sky) {
     sky->moon.color[1] = 0.95f;
     sky->moon.color[2] = 1.0f;
     sky->moon.color[3] = 0.9f;
-    globalSky = sky;
 }
 
 static void renderSkyObject(SkyObject* obj) {
@@ -130,5 +117,4 @@ void skySystemDestroy(SkySystem* sky) {
         gluDeleteQuadric(quadric);
         quadric = NULL;
     }
-    globalSky = NULL;
 }
