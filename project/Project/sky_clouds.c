@@ -1,10 +1,8 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
+#include "CSCIx229.h"
 #include "sky_clouds.h"
 #include "landscape.h"
-#include "CSCIx229.h"
 
+// Create and initialize cloud system
 SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
     SkyCloudSystem* cs = (SkyCloudSystem*)malloc(sizeof(SkyCloudSystem));
     if (!cs) return NULL;
@@ -25,6 +23,7 @@ SkyCloudSystem* skyCloudSystemCreate(float baseHeight) {
     return cs;
 }
 
+// Calculate cloud color based on time of day
 void getCloudColor(float dayTime, float* color) {
     float t = dayTime / 24.0f;
     float sunrise[3] = {1.0f, 0.7f, 0.5f};
@@ -57,6 +56,7 @@ void getCloudColor(float dayTime, float* color) {
     color[2] = colorOut[2];
 }
 
+// Update cloud positions, wind movement, and day/night transitions
 void skyCloudSystemUpdate(SkyCloudSystem* cs, float deltaTime, float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float sunHeight = sin((timeNormalized - 0.25f) * 2 * M_PI);
@@ -85,6 +85,7 @@ void skyCloudSystemUpdate(SkyCloudSystem* cs, float deltaTime, float dayTime) {
     }
 }
 
+// Render volumetric clouds
 void skyCloudSystemRender(SkyCloudSystem* cs, float dayTime) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

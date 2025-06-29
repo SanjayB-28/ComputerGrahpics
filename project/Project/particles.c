@@ -1,6 +1,3 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
 #include "CSCIx229.h"
 #include "particles.h"
 #include "shaders.h"
@@ -21,6 +18,7 @@ static float terrainMaxX = LANDSCAPE_SCALE * 0.5f;
 static float terrainMinZ = -LANDSCAPE_SCALE * 0.5f;
 static float terrainMaxZ = LANDSCAPE_SCALE * 0.5f;
 
+// Initialize GPU particle system with transform feedback
 void particleSystemInit(float terrainScale, float terrainHeight) {
     updateShader = loadShader("shaders/particle_update.vert", NULL);
     glBindAttribLocation(updateShader, 0, "pos");
@@ -82,6 +80,7 @@ void particleSystemInit(float terrainScale, float terrainHeight) {
     free(initData);
 }
 
+// Update particle positions using GPU transform feedback (had a little help from claude)
 void particleSystemUpdate(float dt) {
     int src = curSrc;
     int dst = 1 - curSrc;
@@ -152,6 +151,7 @@ void particleSystemUpdate(float dt) {
     curSrc = dst;
 }
 
+// Render particles as point sprites
 void particleSystemRender() {
     glUseProgram(renderShader);
 #ifdef __APPLE__

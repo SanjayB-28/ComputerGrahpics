@@ -1,3 +1,5 @@
+// Grass fragment shader - handles grass color and lighting effects
+
 #version 120
 varying float vAlpha;
 varying vec3 vNormal;

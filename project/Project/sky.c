@@ -1,12 +1,10 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
+#include "CSCIx229.h"
 #include "sky.h"
 #include "landscape.h"
-#include "CSCIx229.h"
 
 static GLUquadric* quadric = NULL;
 
+// Initialize sky system with sun and moon properties
 void skySystemInit(SkySystem* sky) {
     quadric = gluNewQuadric();
     gluQuadricNormals(quadric, GLU_SMOOTH);
@@ -22,6 +20,7 @@ void skySystemInit(SkySystem* sky) {
     sky->moon.color[3] = 0.9f;
 }
 
+// Render individual sky object with emission lighting
 static void renderSkyObject(SkyObject* obj) {
     if (obj->brightness <= 0.0f) return;
     glPushMatrix();
@@ -41,6 +40,7 @@ static void renderSkyObject(SkyObject* obj) {
     glPopMatrix();
 }
 
+// Update sun and moon positions based on time of day
 void skySystemUpdate(SkySystem* sky, float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float angle = (timeNormalized - 0.25f) * 2 * M_PI;
@@ -57,6 +57,7 @@ void skySystemUpdate(SkySystem* sky, float dayTime) {
     sky->moon.brightness = fmax(0.0f, -sunHeight) * 0.9f;
 }
 
+// Update global lighting based on sun/moon blend
 void skySystemUpdateLighting(SkySystem* sky) {
     float sunB = sky->sun.brightness;
     float moonB = sky->moon.brightness;
@@ -86,6 +87,7 @@ void skySystemUpdateLighting(SkySystem* sky) {
     glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 }
 
+// Render sun and moon with updated positions and lighting
 void skySystemRenderSunAndMoon(SkySystem* sky, float dayTime) {
     skySystemUpdate(sky, dayTime);
     skySystemUpdateLighting(sky);

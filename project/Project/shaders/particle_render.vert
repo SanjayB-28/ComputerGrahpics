@@ -1,3 +1,5 @@
+// Particle render vertex shader - handles particle positioning
+
 #version 120
 
 attribute vec3 pos;

@@ -1,6 +1,3 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
 #include "CSCIx229.h"
 #include "landscape.h"
 #include "shaders.h"
@@ -13,16 +10,6 @@
 #include "grass.h"
 #include "sound.h"
 #include "boulder.h"
-
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glut.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,6 +77,7 @@ static int ambientSoundOn = 1;
 #define DIM_MIN 30.0f
 #define DIM_MAX 300.0f
 
+// Clamp camera distance and sync with camera system
 void clampAndSyncDim() {
     if (dim < DIM_MIN) dim = DIM_MIN;
     if (dim > DIM_MAX) dim = DIM_MAX;
@@ -106,6 +94,7 @@ void special(int key, int x, int y);
 void keyboard(unsigned char key, int x, int y);
 void idle();
 
+// Handle window resize and update projection
 void reshape(int width, int height) {
     asp = (height>0) ? (double)width/height : 1;
     glViewport(0,0, RES*width,RES*height);
@@ -128,6 +117,7 @@ float smoothstep(float edge0, float edge1, float x) {
     return t * t * (3.0f - 2.0f * t);
 }
 
+// Calculate sky color based on time of day
 void getSkyColor(float time, float* color) {
     float t = time / 24.0f;  
     const int NUM_COLORS = 6;
@@ -164,6 +154,7 @@ void getSkyColor(float time, float* color) {
     }
 }
 
+// Update tree sway animation based on wind
 void updateTreeAnimation() {
     static float windTime = 0.0f;
     windTime += deltaTime;
@@ -171,6 +162,7 @@ void updateTreeAnimation() {
     treeSwayAngle = sin(windTime) * 8.0f;
 }
 
+// Setup OpenGL lighting and materials
 void setupLighting() {
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
@@ -184,6 +176,7 @@ void setupLighting() {
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 }
 
+// Update fog based on time of day
 void updateFog(float dayTime) {
     float timeNormalized = dayTime / 24.0f;
     float sunAngle = (timeNormalized - 0.25f) * 2 * M_PI;
@@ -217,6 +210,7 @@ void updateFog(float dayTime) {
     }
 }
 
+// Initialize OpenGL state
 void initGL() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -228,6 +222,7 @@ void initGL() {
     glPolygonOffset(1.0f, 1.0f);
 }
 
+// Main rendering function
 void display() {
     float skyColor[3];
     getSkyColor(dayTime, skyColor);
@@ -311,6 +306,7 @@ void display() {
     glutSwapBuffers();
 }
 
+// Handle mouse button events
 void mouse(int button, int state, int x, int y) {
     lastX = x;
     lastY = y;
@@ -319,37 +315,14 @@ void mouse(int button, int state, int x, int y) {
     } else {
         mouseButtons &= ~(1<<button);
     }
-    if (button == 3) {
-        if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
-            dim = dim * 0.9;
-            camera->orbitDistance *= 0.9;
-            clampAndSyncDim();
-        }
-    } else if (button == 4) {
-        if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
-            dim = dim * 1.1;
-            camera->orbitDistance *= 1.1;
-            clampAndSyncDim();
-        }
-    }
     glutPostRedisplay();
 }
 
+// Handle mouse motion for camera control
 void mouseMotion(int x, int y) {
     int dx = x - lastX;
     int dy = y - lastY;
     if (camera->mode == CAMERA_MODE_FREE_ORBIT) {
-        if (mouseButtons & 1) {
-            th += dx;
-            ph += dy;
-            camera->orbitYaw += dx;
-            camera->orbitPitch += dy;
-        }
-        else if (mouseButtons & 4) {
-            dim *= (1 + dy/100.0);
-            camera->orbitDistance *= (1 + dy/100.0);
-            clampAndSyncDim();
-        }
     } else {
         if (mouseButtons & 1) {
             viewCameraRotate(camera, dx * 0.5f, -dy * 0.5f);
@@ -360,6 +333,7 @@ void mouseMotion(int x, int y) {
     glutPostRedisplay();
 }
 
+// Handle special key events
 void special(int key, int x, int y) {
     float deltaTime = 0.016f;
     if (camera && camera->mode == CAMERA_MODE_FREE_ORBIT) {
@@ -379,16 +353,6 @@ void special(int key, int x, int y) {
             case GLUT_KEY_DOWN:
                 ph -= 5;
                 camera->orbitPitch = ph;
-                break;
-            case GLUT_KEY_PAGE_DOWN:
-                dim += 0.1;
-                camera->orbitDistance = dim;
-                clampAndSyncDim();
-                break;
-            case GLUT_KEY_PAGE_UP:
-                dim -= 0.1;
-                camera->orbitDistance = dim;
-                clampAndSyncDim();
                 break;
         }
         th %= 360;
@@ -415,6 +379,7 @@ void special(int key, int x, int y) {
     glutPostRedisplay();
 }
 
+// Handle keyboard input and controls
 void keyboard(unsigned char key, int x, int y) {
     switch(key) {
         case 27:
@@ -567,6 +532,7 @@ void idle() {
     glutPostRedisplay();
 }
 
+// Main application entry point
 int main(int argc, char* argv[]) {
     glutInit(&argc,argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
@@ -574,7 +540,7 @@ int main(int argc, char* argv[]) {
     int screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
     glutInitWindowSize(screenWidth, screenHeight);
     glutCreateWindow("Project: Sanjay Baskaran");
-#ifndef __APPLE__
+#ifdef USEGLEW
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         fprintf(stderr, "GLEW initialization failed: %s\n", glewGetErrorString(err));

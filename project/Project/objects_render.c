@@ -1,10 +1,7 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
+#include "CSCIx229.h"
 #include "objects_render.h"
 #include "fractal_tree.h"
 #include "boulder.h"
-#include "CSCIx229.h"
 
 static float getSlopeAt(Landscape* landscape, float x, float z);
 
@@ -22,6 +19,7 @@ void freeLandscapeObjects() {
     }
 }
 
+// Initialize and place trees procedurally based on terrain parameters
 void initLandscapeObjects(Landscape* landscape) {
     freeLandscapeObjects();
     if (!landscape) return;
@@ -59,6 +57,7 @@ void initLandscapeObjects(Landscape* landscape) {
     }
 }
 
+// Calculate terrain slope at given coordinates using normal vectors
 static float getSlopeAt(Landscape* landscape, float x, float z) {
     float nx = (x / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
     float nz = (z / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
@@ -74,6 +73,7 @@ static float getSlopeAt(Landscape* landscape, float x, float z) {
     return slope / (float)M_PI;
 }
 
+// Render all landscape objects with wind animation and transformations
 void renderLandscapeObjects(Landscape* landscape) {
     if (!landscape || !treeInstances) return;
     for (int i = 0; i < numTrees; ++i) {

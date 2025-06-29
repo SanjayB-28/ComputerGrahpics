@@ -1,6 +1,5 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
+// Adapted from CSCI-4229/5229 course examples by professor Willem A. (Vlakkies) Schreuder
+
 #include "CSCIx229.h"
 #include "shaders.h"
 

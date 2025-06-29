@@ -1,3 +1,5 @@
+// Boulder vertex shader - handles boulder vertex transformation
+
 #version 120
 
 varying vec3 Normal;

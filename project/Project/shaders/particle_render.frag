@@ -1,14 +1,13 @@
+// Particle render fragment shader - handles particle color and transparency
+
 #version 120
 
-// Returns 1.0 for points inside a snowflake, 0.0 outside
 float simpleSnowflake(vec2 uv) {
     uv = uv * 2.0 - 1.0;
     float r = length(uv);
     float a = atan(uv.y, uv.x);
-    // 6 arms, but much broader
     float arm = abs(sin(3.0 * a));
     float flake = smoothstep(0.25, 0.22, r) * smoothstep(0.5, 0.2, arm);
-    // Add a soft core
     flake += smoothstep(0.08, 0.0, r) * 0.5;
     return clamp(flake, 0.0, 1.0);
 }

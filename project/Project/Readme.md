@@ -1,108 +1,144 @@
-# Advanced Terrain Generation System
+# Alpine Wilderness Simulator
+### By: Sanjay Baskaran
 
-A real-time terrain visualization system demonstrating advanced OpenGL graphics techniques. Features procedural terrain, dynamic weather, day/night cycles, and sophisticated environmental effects.
+An interactive 3D simulation of a natural landscape inspired by the Boulder area, featuring dynamic weather, day/night cycles, and rich environmental interactions. This project demonstrates advanced OpenGL graphics techniques with procedural terrain generation, sophisticated particle systems, and immersive atmospheric effects.
 
-## Key Features Worth An A
+## Key Features
 
-1. **Advanced Camera System**
-   - Multiple view modes demonstrating mastery of 3D transformations
-   - Smooth camera interpolation and collision detection
-   - Try pressing: `1` (First Person), `3` (Free Orbit)
+###  **Procedural Terrain Generation**
+- **Multi-octave Perlin noise** for realistic elevation
+- **Dynamic texture blending** based on height and slope for varied terrain types
+- **Collision detection** for camera movement and particle interactions
+- **Water rendering** with animated surface and adjustable water level
 
-2. **Dynamic Environment & Lighting**
-   - Realistic day/night cycle with dynamic lighting
-   - Volumetric cloud system with wind effects
-   - Snow particle system with terrain accumulation
-   - Press `T` to toggle time animation, `W` for weather
+###  **Dynamic Environment & Atmospheric Effects**
+- **Realistic day/night cycle** with dynamic sky color transitions
+- **Volumetric cloud system** with procedural clouds
+- **GPU-based snow particle system** with 20,000 particles and terrain accumulation
+- **Atmospheric fog** that changes density and color with time of day
+- **Sun and moon positioning** with emission lighting and realistic orbits
 
-3. **Sophisticated Terrain & Vegetation**
-   - Procedurally generated terrain using multi-octave noise
-   - Three distinct tree types with wind animation
-   - Dynamic water system with reflections
-   - Press `w` for wireframe view, `[ ]` to adjust water level
+###  **Advanced Dual-Mode Camera System**
+- **First Person Mode**: Ground-level exploration with terrain collision detection
+- **Free Orbit Mode**: Aerial view with smooth rotation and zoom controls
+- **Mouse and keyboard controls** with intuitive navigation
+- **Camera interpolation** between modes with state preservation
+- **Terrain boundary constraints** to prevent camera clipping
 
-## Quick Demo Path
-1. Launch in Free Orbit mode (`3`) to see overall terrain
-2. Toggle weather (`W`) to see snow effects
-3. Switch to First Person (`1`) to explore ground level
-4. Enable fog (`F`) for atmospheric effects
-5. Cycle through day/night (`T`) to see lighting changes
+###  **Sophisticated Vegetation & Environmental Systems**
+- **L-System fractal tree generation** with recursive branching and wind animation
+- **Dynamic grass system** with 500,000 blades and individual sway effects
+- **Procedural boulder placement** with shape variation and collision avoidance
+- **Texture-based rendering** for bark, leaves, and terrain materials
+- **Wind effects** on trees, grass, and atmospheric particles
+
+###  **Advanced Rendering & Shaders**
+- **Custom shader pipeline** for terrain, vegetation, particles, and atmospheric effects
+- **GPU-based particle physics** using transform feedback for performance
+- **Dynamic lighting system** with day/night transitions and material properties
+- **Point sprite rendering** with custom snowflake and particle shaders
+- **Texture mapping** for realistic material appearance
+
+###  **Interactive Weather & Sound**
+- **Toggleable snow weather system** with realistic particle physics
+- **Ambient forest sound system** with SDL2 audio integration
+- **Wind simulation** affecting all environmental elements
+- **Weather state management** with smooth transitions
+- **Particle accumulation** and respawning on terrain
+
+##  Quick Demo
+
+Experience the key features in this order:
+
+1. **Launch in Free Orbit mode** to see overall terrain and sky system
+2. **Switch to First Person** (`1`) to explore ground level
+3. **Toggle weather** (`W`) to see snow effects and particle system
+4. **Enable fog** (`b`) for atmospheric effects and time-of-day transitions
+5. **Press W** to explore in wireframe mode
 
 ## Build Instructions
 
 ### Prerequisites
-- OpenGL
+- OpenGL 2.1+
 - GLUT/FreeGLUT
 - GCC compiler
 - Make
+- SDL2 (for sound system)
 
 ### Compilation
 ```bash
+make clean
 make
-```
-```bash
 ./final
 ```
 
 ## Controls
 
 ### Camera Controls
-- Arrow Keys: Move camera/character
-- Mouse Drag: Look around
-- 1: First Person View
-- 3: Free Orbit View
+- **Arrow Keys**: 
+  - **Free Orbit Mode**: Rotate view
+  - **First Person Mode**: Strafe/Walk (Forward = Up, Backward = Down, Left = Left, Right = Right)
+- **Mouse Drag (Left Button)**: Look around (First Person mode only)
+- **1**: Switch to First Person View
+- **2**: Switch to Free Orbit View
+- **z** / **Z**: Quick zoom **in** / **out** (Free Orbit mode only)
+- **r**: Reset camera and simulation parameters to defaults
 
 ### Environment Controls
-- T: Toggle time animation
-- ( ): Adjust time speed
-- F: Toggle fog
-- W: Toggle weather (Fall/Winter - changes landscape appearance)
-- N: Toggle snow particles (independent of weather)
-- [ ]: Adjust water level
-- 8/9: Adjust fog density
+- **T**: Toggle time animation (day/night cycle)
+- **k/l**: Decrease/increase time speed (range: 0.1x to 5.0x, step: 0.1x)
+- **b**: Toggle atmospheric fog
+- **W**: Toggle weather system (Fall ↔ Winter, enables snow in Winter)
+- **[ ]**: Lower/raise water level (±1.0 unit)
+- **n**: Toggle snow particles
+- **m**: Toggle ambient sound
 
 ### Display Controls
-- w: Toggle wireframe mode
-- a: Toggle axes display
-- r: Reset view
-- ESC: Exit
+- **w**: Toggle wireframe mode
+- **a**: Toggle coordinate axes display
+- **ESC**: Exit application
+
 
 ## Code Attribution
 
-This project incorporates code and techniques from several sources:
+### Core OpenGL Framework and Utilities
+- **Basic OpenGL setup and utility functions**: CSCI-4229/5229 class examples by professor Willem A. (Vlakkies) Schreuder
+- **Shader management system**: Adapted from https://learnopengl.com/Getting-started/Shaders
 
-1. Core OpenGL Framework and Utilities:
-   - Basic OpenGL setup and utility functions from CSCI-4229/5229 class examples by Willem A. (Vlakkies) Schreuder
-   - Shader management system from LearnOpenGL.com by Joey de Vries
+### Terrain and Environment Systems
+- **Perlin noise implementation**: Adapted from Ken Perlin's improved noise algorithm [http://mrl.nyu.edu/~perlin/noise/]
+- **Water rendering system**: Adapted from OpenGL-Tutorial.org techniques
 
-2. Terrain and Environment:
-   - Perlin noise implementation adapted from Ken Perlin's reference code [http://mrl.nyu.edu/~perlin/noise/]
-   - Terrain generation techniques from GPU Gems 3, Chapter 1: "Generating Complex Procedural Terrains"
-   - Water rendering system adapted from OpenGL-Tutorial.org
-   - Cloud system inspired by GPU Gems 2, Chapter 15: "Realistic Cloud Rendering"
+### Camera and Navigation System
+- **Core camera implementation**: Adapted from LearnOpenGL's Camera tutorial [https://learnopengl.com/Getting-started/Camera]
+- **Multiple view modes and collision detection**: Enhanced with Claude assistance
 
-3. Camera System:
-   - Core camera implementation adapted from LearnOpenGL's Camera tutorial
-   - Multiple view modes and collision detection enhanced with Claude assistance
+### Vegetation and Environmental Systems
+- **L-System fractal trees**: Reference algorithms from [https://gpfault.net/posts/generating-trees.txt.html] and [https://thecodingtrain.com/challenges/16-l-system-fractal-trees]
+- **Wind animation system**: Enhanced with Claude assistance
 
-4. Vegetation System:
-   - Tree generation algorithms adapted from Real-Time Rendering 4th Edition, Chapter 7: "Advanced Shading"
-   - Tree placement and density calculations from GPU Gems 3
-   - Wind animation system developed with Claude assistance
+### Particle and Weather Effects
+- **Base particle system**: Adapted from OpenGL-Tutorial.org [https://www.opengl-tutorial.org/intermediate-tutorials/tutorial-18-billboards-particles/]
+- **GPU transform feedback**: Standard OpenGL particle system techniques
+- **Snow accumulation system**: Enhanced with Claude assistance
 
-5. Particle and Weather Effects:
-   - Base particle system adapted from OpenGL-Tutorial.org
-   - Weather simulation enhanced with Clade assistance
-   - Snow accumulation system developed with Claude assistance
+### Lighting and Atmospheric Effects
+- **Dynamic lighting system**: Based on LearnOpenGL's Advanced Lighting tutorials
+- **Day/night cycle implementation**: Assisted by Claude
 
-6. Lighting and Atmosphere:
-   - Dynamic lighting system based on LearnOpenGL's Advanced Lighting tutorials
-   - Day/night cycle implementation assisted by Claude
-   - Atmospheric effects adapted from OpenGL Red Book
+### AI Assistance
+This project was developed independently with AI assistance for specific development tasks:
 
-Detailed attribution comments can be found within individual source files marking specific adapted functions and algorithms.
+- **GitHub Copilot**: Extensively used throughout development for code completion and suggestions
+- **Claude**: Assisted with specific function implementations and algorithms, documented in function comments
+- **Code refactoring and cleanup** during development phases
+- **Debugging assistance** for shader compilation issues and OpenGL warnings
+- **Minor syntax corrections** and code organization
+- **Documentation formatting** and README structure
 
-AI Assistance: Various aspects of this project were developed or enhanced with assistance from Claude (2024), particularly in areas of terrain collision, weather effects, and system integration. These contributions are documented in the source code comments.
 
-## Video Demo
-For a complete feature showcase: [Link to presentation](https://youtu.be/P-GCLTKG9bw)
+## Before Demo
+
+- **GPU-based rain particle system** to complement existing snow effects
+- **Additional terrain objects** including insects, butterflies, or other wildlife (number to be determined based on time constraints)
+

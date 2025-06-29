@@ -1,6 +1,3 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
 #include "CSCIx229.h"
 #include "grass.h"
 #include "shaders.h"
@@ -27,6 +24,7 @@ static float randf(float a, float b) {
     return a + ((float)rand() / RAND_MAX) * (b - a);
 }
 
+// Initialize grass system with procedural blade generation
 void grassSystemInit(Landscape* landscape, float areaSize, int numBlades) {
     grassCount = numBlades;
     float clampFactor = 0.98f;
@@ -85,6 +83,7 @@ void grassSystemInit(Landscape* landscape, float areaSize, int numBlades) {
     grassTex = LoadTexBMP("tex/leaf.bmp");
 }
 
+// Render grass with wind animation and lighting (had a little help from claude)
 void grassSystemRender(float time, float windStrength, const float sunDir[3], const float ambient[3]) {
     if (!grassShader || !grassVBO || !grassVAO) return;
     glUseProgram(grassShader);

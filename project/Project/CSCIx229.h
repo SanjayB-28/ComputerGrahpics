@@ -1,3 +1,5 @@
+// Adapted from CSCI-4229/5229 course examples by professor Willem A. (Vlakkies) Schreuder
+
 #ifndef CSCIx229
 #define CSCIx229
 
@@ -10,22 +12,48 @@
 #ifdef USEGLEW
 #include <GL/glew.h>
 #endif
+
 #define GL_GLEXT_PROTOTYPES
 
-#ifdef __APPLE__
+#if defined(SDL2)
+  #if defined(__APPLE__)
+    #include <SDL.h>
+    #include <SDL_mixer.h>
+  #else
+    #include <SDL2/SDL.h>
+    #include <SDL2/SDL_mixer.h>
+  #endif
+  #if defined(__APPLE__)
+    #include <GLUT/glut.h>
+  #else
+    #include <GL/glut.h>
+  #endif
+#elif defined(SDL)
+#include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
+#elif defined(GLFW)
+#include <GLFW/glfw3.h>
+#elif defined(__APPLE__)
 #include <GLUT/glut.h>
-#include <OpenGL/glu.h>
-#include <OpenGL/gl.h>
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #else
 #include <GL/glut.h>
+#endif
+
+#ifdef __APPLE__
+#include <OpenGL/glu.h>
+#include <OpenGL/gl.h>
+
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#else
 #include <GL/glu.h>
 #include <GL/gl.h>
 #endif
 
+
 #ifndef RES
 #define RES 1
 #endif
+
 
 #define Cos(th) cos(3.14159265/180*(th))
 #define Sin(th) sin(3.14159265/180*(th))

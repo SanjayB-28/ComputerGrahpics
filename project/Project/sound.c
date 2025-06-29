@@ -1,10 +1,10 @@
+#include "CSCIx229.h"
 #include "sound.h"
-#include <SDL.h>
-#include <SDL_mixer.h>
 
 static Mix_Music* ambienceMusic = NULL;
 static int soundInitialized = 0;
 
+// Initialize SDL2 audio system and load ambient music
 int soundSystemInit() {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
@@ -23,6 +23,7 @@ int soundSystemInit() {
     return 1;
 }
 
+// Start playing ambient background music in loop
 void soundSystemPlayAmbience() {
     if (soundInitialized && ambienceMusic) {
         Mix_PlayMusic(ambienceMusic, -1);

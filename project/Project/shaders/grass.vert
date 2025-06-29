@@ -1,3 +1,5 @@
+// Grass vertex shader - handles grass blade positioning and wind animation
+
 #version 120
 attribute vec3 position;
 attribute float swaySeed;

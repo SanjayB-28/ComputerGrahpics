@@ -5,23 +5,22 @@
 extern "C" {
 #endif
 
-// Parameters for object placement (can be extended for more object types)
 typedef struct {
     float minSlope;
     float maxSlope;
     float minHeight;
     float maxHeight;
     float minDistanceFromWater;
-    int   density; // objects per terrain area unit
+    int   density;
 } ObjectPlacementParams;
 
 typedef struct {
     float x, y, z;
     float scale;
     int depth;
-    float rotation; // Y-axis rotation in degrees
-    unsigned int branchBias; // Extra randomizer for branching
-    int leafColorIndex; // Per-tree leaf color
+    float rotation;
+    unsigned int branchBias;
+    int leafColorIndex;
 } TreeInstance;
 
 void renderLandscapeObjects(Landscape* landscape);

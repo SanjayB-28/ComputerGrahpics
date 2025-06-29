@@ -1,17 +1,16 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
+
+#include "CSCIx229.h"
 #include "fractal_tree.h"
 #include "shaders.h"
 #include "landscape.h"
 #include "objects_render.h"
-#include "CSCIx229.h"
 
 static int branchShader = 0;
 static int leafShader = 0;
 extern GLuint barkTexture;
 extern GLuint leafTexture;
 
+// Generate deterministic random values for tree variation
 static float branchRandom(int depth, int branch, unsigned int treeSeed)
 {
     unsigned int seed = (depth * 73856093u) ^ (branch * 19349663u) ^ treeSeed;
@@ -19,6 +18,7 @@ static float branchRandom(int depth, int branch, unsigned int treeSeed)
     return ((seed & 0xFFFF) / 65535.0f) - 0.5f;
 }
 
+// Draw textured cylinder for tree branches
 static void drawCylinderY(double length, double baseRadius, double topRadius)
 {
     const int segments = 4;
@@ -65,6 +65,7 @@ static void drawCylinderY(double length, double baseRadius, double topRadius)
     glEnd();
 }
 
+// Draw leaf cluster with texture and color variation
 static void drawLeafCluster(float height, float baseRadius, int layers, int segments, unsigned int seed, int leafColorIndex) {
     float layerSpacing = height / layers;
     float startHeight = 0.0f;
@@ -119,6 +120,9 @@ static void drawLeafCluster(float height, float baseRadius, int layers, int segm
     if (leafTexture) glDisable(GL_TEXTURE_2D);
 }
 
+// Recursively draw fractal tree with branches and leaves
+// L-System fractal tree algorithms
+// Reference: https://gpfault.net/posts/generating-trees.txt.html, https://thecodingtrain.com/challenges/16-l-system-fractal-trees
 static void drawFractalTree(int depth, double length, double baseRadius, double topRadius, int drawLeaves, unsigned int treeSeed, int leafColorIndex)
 {
     if (depth == 0)
@@ -153,6 +157,7 @@ void fractalTreeInit() {
     leafShader = loadShader("shaders/tree_leaf.vert", "shaders/tree_leaf.frag");
 }
 
+// Draw complete fractal tree with lighting and transformations
 void fractalTreeDraw(double x, double y, double z, double scale, int depth, unsigned int treeSeed, int leafColorIndex)
 {
     glPushMatrix();

@@ -1,3 +1,5 @@
+// Particle update vertex shader - handles GPU-based particle physics and collision (had a little help from claude)
+
 #version 120
 
 attribute vec3 pos;
@@ -62,7 +64,7 @@ void main() {
         newRestTime = restTime + dt;
         newVel = vec3(0.0);
         float margin = 1.0;
-        if (newRestTime > 2.0) {
+        if (newRestTime > 5.0) {
             float seed = time + pos.x + pos.z + restTime + state * 31.0;
             float rx = clamp(mix(terrainMinX + margin, terrainMaxX - margin, hash2(seed, 1.0)), terrainMinX, terrainMaxX);
             float rz = clamp(mix(terrainMinZ + margin, terrainMaxZ - margin, hash2(seed, 2.0)), terrainMinZ, terrainMaxZ);

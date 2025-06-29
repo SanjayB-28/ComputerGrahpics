@@ -1,13 +1,10 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
+#include "CSCIx229.h"
 #include "boulder.h"
 #include "objects_render.h"
 #include "landscape.h"
 #include "shaders.h"
-#include "CSCIx229.h"
 
-#define NUM_BOULDERS 40
+#define NUM_BOULDERS 50
 
 static BoulderInstance* boulders = NULL;
 static int numBoulders = 0;
@@ -28,6 +25,7 @@ void freeBoulders() {
     }
 }
 
+// Initialize and place boulders procedurally with collision detection
 void initBoulders(Landscape* landscape) {
     freeBoulders();
     if (!landscape) return;
@@ -74,6 +72,7 @@ void initBoulders(Landscape* landscape) {
     }
 }
 
+// Draw individual boulder with procedural shape variation and lighting (had a little help from copilot)
 void boulderDraw(float x, float y, float z, float scale, float rotation, unsigned int shapeSeed, int colorIndex) {
     float baseVerts[28][3] = {
         {0.0f, 1.0f, 0.0f}, {0.8f, 0.6f, 0.2f}, {0.5f, 0.5f, -0.9f}, {-0.7f, 0.7f, -0.6f},

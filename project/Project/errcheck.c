@@ -1,3 +1,5 @@
+// Adapted from CSCI-4229/5229 course examples by professor Willem A. (Vlakkies) Schreuder
+
 #include "CSCIx229.h"
 
 void ErrCheck(const char* where)

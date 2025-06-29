@@ -1,13 +1,11 @@
-#ifndef __APPLE__
-#include <GL/glew.h>
-#endif
-#include "landscape.h"
 #include "CSCIx229.h"
+#include "landscape.h"
 #include "shaders.h"
 
 #define NOISE_OFFSET_X 37.0f
 #define NOISE_OFFSET_Z 91.0f
 
+// Create and initialize landscape with procedural terrain
 Landscape* landscapeCreate() {
     Landscape* landscape = (Landscape*)malloc(sizeof(Landscape));
     if (!landscape) return NULL;
@@ -54,6 +52,8 @@ Landscape* landscapeCreate() {
     return landscape;
 }
 
+// Perlin noise and interpolation adapted from Ken Perlin's improved noise
+// http://mrl.nyu.edu/~perlin/noise/
 float noise2D(int x, int y) {
     int n = x + y * 57;
     n = (n << 13) ^ n;
@@ -95,6 +95,7 @@ float min_f(float a, float b) {
     return a < b ? a : b;
 }
 
+// Generate terrain heightmap using multi-octave Perlin noise
 void landscapeGenerateHeightMap(Landscape* landscape) {
     float persistence = 0.5f;
     int octaves = 5;
@@ -132,6 +133,7 @@ void landscapeGenerateHeightMap(Landscape* landscape) {
     }
 }
 
+// Calculate vertex normals for lighting (had a little help from claude)
 void landscapeCalculateNormals(Landscape* landscape) {
     memset(landscape->normals, 0, landscape->vertexCount * 3 * sizeof(float));
 
@@ -195,6 +197,7 @@ float landscapeMix(float a, float b, float t) {
     return a * (1.0f - t) + b * t;
 }
 
+// Calculate snow coverage based on height and slope
 float landscapeGetSnowBlend(float height, float slope) {
     float snowStartHeight = 12.0f;
     float snowEndHeight = 25.0f;
@@ -211,6 +214,7 @@ float landscapeGetSnowBlend(float height, float slope) {
     return heightFactor * slopeFactor;
 }
 
+// Render terrain with weather-based coloring
 void landscapeRender(Landscape* landscape, int weatherType) {
     if (!landscape) return;
     float noSpecular[] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -273,12 +277,14 @@ void landscapeRender(Landscape* landscape, int weatherType) {
     glEnd();
 }
 
+// Smooth step interpolation function
 float landscapeSmoothStep(float edge0, float edge1, float x) {
     float t = (x - edge0) / (edge1 - edge0);
     t = t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
     return t * t * (3.0f - 2.0f * t);
 }
 
+// Render animated water surface with time-based coloring
 void landscapeRenderWater(float waterLevel, Landscape* landscape, float dayTime) {
     float waterSize = LANDSCAPE_SCALE * 1.0f;
     int segments = 64;
@@ -356,6 +362,7 @@ void landscapeRenderWater(float waterLevel, Landscape* landscape, float dayTime)
     glDisable(GL_BLEND);
 }
 
+// Get terrain height at any world position using bilinear interpolation
 float landscapeGetHeight(Landscape* landscape, float x, float z) {
     float nx = (x / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);
     float nz = (z / LANDSCAPE_SCALE + 0.5f) * (LANDSCAPE_SIZE - 1);

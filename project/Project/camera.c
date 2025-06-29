@@ -1,6 +1,6 @@
+#include "CSCIx229.h"
 #include "camera.h"
 #include "landscape.h"
-#include "CSCIx229.h"
 
 extern Landscape* landscape;
 
@@ -12,6 +12,7 @@ extern Landscape* landscape;
 
 static void constrainToTerrain(ViewCamera* cam);
 
+// Create and initialize camera with default settings
 ViewCamera* viewCameraCreate(void) {
     ViewCamera* cam = (ViewCamera*)malloc(sizeof(ViewCamera));
     if (!cam) return NULL;
@@ -34,6 +35,7 @@ ViewCamera* viewCameraCreate(void) {
     return cam;
 }
 
+// Update camera view vectors based on current mode
 void viewCameraUpdateVectors(ViewCamera* cam) {
     switch(cam->mode) {
         case CAMERA_MODE_FIRST_PERSON: {
@@ -70,6 +72,7 @@ void viewCameraUpdateVectors(ViewCamera* cam) {
     }
 }
 
+// Move camera based on input direction (had a little help from copilot)
 void viewCameraMove(ViewCamera* cam, int direction, float deltaTime) {
     if (!cam) return;
     float speed = CAMERA_SPEED * deltaTime;
@@ -134,6 +137,7 @@ void viewCameraMove(ViewCamera* cam, int direction, float deltaTime) {
     viewCameraUpdateVectors(cam);
 }
 
+// Rotate camera based on mouse input
 void viewCameraRotate(ViewCamera* cam, float deltaX, float deltaY) {
     if (!cam) return;
     if (cam->mode == CAMERA_MODE_FREE_ORBIT) {
@@ -146,6 +150,7 @@ void viewCameraRotate(ViewCamera* cam, float deltaX, float deltaY) {
     viewCameraUpdateVectors(cam);
 }
 
+// Switch between camera modes (orbit vs first-person)
 void viewCameraSetMode(ViewCamera* cam, CameraMode newMode) {
     if (!cam) return;
     if (newMode == cam->mode) return;
@@ -153,6 +158,7 @@ void viewCameraSetMode(ViewCamera* cam, CameraMode newMode) {
     viewCameraUpdateVectors(cam);
 }
 
+// Update camera position and constraints
 void viewCameraUpdate(ViewCamera* cam, float deltaTime) {
     if (!cam) return;
     if (cam->mode == CAMERA_MODE_FIRST_PERSON) {
@@ -162,6 +168,7 @@ void viewCameraUpdate(ViewCamera* cam, float deltaTime) {
     constrainToTerrain(cam);
 }
 
+// Constrain camera to terrain boundaries
 static void constrainToTerrain(ViewCamera* cam) {
     float halfScale = LANDSCAPE_SCALE * 0.5f;
     if (cam->mode == CAMERA_MODE_FIRST_PERSON) {
@@ -174,6 +181,7 @@ void viewCameraDestroy(ViewCamera* cam) {
     free(cam);
 }
 
+// Set camera projection matrix
 void viewCameraSetProjection(ViewCamera* cam, float fov, float aspect, float nearPlane, float farPlane) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();

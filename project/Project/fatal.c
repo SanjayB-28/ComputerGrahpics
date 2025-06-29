@@ -1,3 +1,5 @@
+// Adapted from CSCI-4229/5229 course examples professor by Willem A. (Vlakkies) Schreuder
+
 #include "CSCIx229.h"
 
 void Fatal(const char* format , ...)

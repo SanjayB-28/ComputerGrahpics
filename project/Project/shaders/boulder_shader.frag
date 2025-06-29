@@ -1,3 +1,5 @@
+// Boulder fragment shader - handles boulder texturing and color variation
+
 #version 120
 
 varying vec3 Normal;

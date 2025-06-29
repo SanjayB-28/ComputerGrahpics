@@ -1,3 +1,5 @@
+// Tree leaf fragment shader - handles leaf color and texture blending
+
 #version 120
 
 varying vec3 Normal;

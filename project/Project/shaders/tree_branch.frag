@@ -1,3 +1,5 @@
+// Tree branch fragment shader - handles bark texturing and lighting
+
 #version 120
 
 varying vec3 Normal;

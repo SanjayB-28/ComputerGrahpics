@@ -1,3 +1,5 @@
+// Tree branch vertex shader - handles branch vertex transformation
+
 #version 120
 
 varying vec3 Normal;

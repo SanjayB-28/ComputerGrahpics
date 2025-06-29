@@ -1,3 +1,5 @@
+// Tree leaf vertex shader - handles leaf positioning and texture coordinates
+
 #version 120
 
 varying vec3 Normal;

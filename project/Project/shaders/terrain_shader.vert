@@ -1,3 +1,5 @@
+// Terrain vertex shader - handles terrain vertex transformation
+
 #version 120
 
 varying vec3 Normal;
